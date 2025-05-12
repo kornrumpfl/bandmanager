@@ -1,0 +1,21 @@
+.admin-panel-container {
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .admin-card {
+    width: 500px;
+    background-color: #2c2c3e;
+    color: white;
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .status-msg {
+    margin-top: 1rem;
+    font-weight: bold;
+  }
+  

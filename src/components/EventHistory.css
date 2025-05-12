@@ -1,0 +1,22 @@
+.history-container {
+    padding: 1rem;
+  }
+  
+  .custom-date {
+    text-align: center;
+    width: 2rem;
+    height: 2rem;
+    line-height: 2rem;
+    border-radius: 50%;
+  }
+  
+  .custom-date.highlighted {
+    background-color: red;
+    color: white;
+  }
+  
+  .history-card {
+    margin-top: 1rem;
+    background-color: #2c2c3e;
+    color: white;
+  } 

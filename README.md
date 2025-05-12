@@ -1,70 +1,117 @@
-# Getting Started with Create React App
+## 🎸 Band Management App - Project Documentation
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### 📌 **Project Overview:**
 
-## Available Scripts
+The Band Management App is a React-based web application designed to help manage upcoming band performances, song lists, and event scheduling. It includes authentication (Email/Password and Google Sign-In), Firestore database integration, and PrimeReact UI components for a smooth user experience.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+### 🗂️ **Project Structure:**
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+src/
+├── components/
+│   ├── Dashboard.js
+│   ├── SongDetails.js
+│   └── SideNavBar.js
+│
+├── services/
+│   ├── firebaseConfig.js
+│   ├── EventService.js
+│   └── SongService.js
+│
+├── App.js
+├── App.css
+├── index.js
+└── firebase.json
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+### ✨ **Main Components:**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### 1️⃣ **Dashboard.js**
 
-### `npm run build`
+* Displays a calendar and list of upcoming events.
+* Allows CRUD operations for event management.
+* Smooth animations for item transitions.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### 2️⃣ **SongDetails.js**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+* Detailed form to input song details:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  * Singer, Song Name, Lyrics (PT & DE), YouTube Links, Additional Notes, and Cifra Link.
+* Integrated with Firestore to save and delete song data.
 
-### `npm run eject`
+#### 3️⃣ **SideNavBar.js**
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+* A collapsible sidebar for easy navigation:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+  * Home, Add, Book, Search, Settings, and Logout.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 🔥 **Firebase Integration:**
 
-## Learn More
+* Firestore is used for data persistence with two main collections:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+  * `events`: For event scheduling.
+  * `songs`: For song management.
+* Realtime updates are handled with Firestore listeners.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+### 🖌️ **Styling & UI:**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+* Styled with **PrimeReact** components for modern UI elements.
+* CSS animations for smooth transitions in the Dashboard.
+* Dark-themed UI with clean, structured layout.
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 🔄 **Navigation Flow:**
 
-### Making a Progressive Web App
+1. **Login Screen** → User logs in via Email/Password or Google Sign-In.
+2. **Dashboard** → Displays upcoming events and allows adding/editing of events.
+3. **SongDetails** → Accessible from the 'Add' button on the sidebar.
+4. **Logout** → Sidebar button to securely log out.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+### 🚀 **Deployment:**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+* Firebase Hosting (Recommended)
+* Vercel / Netlify (Alternative)
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### 🔄 **API References:**
 
-### `npm run build` fails to minify
+#### 🔹 **EventService.js**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Manages CRUD operations for event scheduling:
+
+* `fetchEvents()` → Fetches all events from Firestore.
+* `addEvent(event)` → Adds a new event to Firestore.
+* `deleteEvent(id)` → Deletes an event by its ID.
+* `updateEvent(id, updatedEvent)` → Updates an event with new data.
+
+#### 🔹 **SongService.js**
+
+Handles CRUD operations for song details:
+
+* `fetchSongs()` → Retrieves all songs from Firestore.
+* `addSong(song)` → Adds a new song to Firestore.
+* `deleteSong(id)` → Deletes a song by its ID.
+
+---
+
+### 🛠️ **Future Improvements:**
+
+1. **Search and Filter Features** → Improve navigation within large song lists.
+2. **Role-based Access Control** → Different permissions for admin and band members.
+3. **Notifications** → Reminders for upcoming shows and events.
+4. **File Uploads** → Attach sheet music or practice videos to events.
+
+---
+

@@ -1,0 +1,13 @@
+.side-nav {
+    width: 250px;
+    background-color: #2c2c3e;
+    height: 100vh;
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .nav-btn {
+    width: 100%;
+  }
+  
