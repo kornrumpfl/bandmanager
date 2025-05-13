@@ -39,3 +39,30 @@
     flex-direction: column;
   }
 }
+
+
+
+.clickable-song {
+  cursor: pointer;
+  color: #42a5f5;
+  text-decoration: underline;
+}
+
+.clickable-song:hover {
+  color: #2196f3;
+}
+
+.scroll-list {
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.dashboard-footer {
+  text-align: center;
+  margin-top: 3rem;
+  color: #999;
+  font-size: 0.85rem;
+}

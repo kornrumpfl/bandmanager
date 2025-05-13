@@ -72,7 +72,16 @@ const Dashboard = () => {
               <strong>Songs:</strong>
               <ul>
                 {getSongTitles(event.songs || []).map((title, index) => (
-                  <li key={index}>{title}</li>
+                  <li
+                  key={index}
+                  className="clickable-song"
+                  onClick={() => {
+                    const song = songs.find((s) => s.song === title);
+                    if (song) navigate(`/song/${song.id}`);
+                  }}
+                >
+                  {title}
+                </li>
                 ))}
               </ul>
               <div className="card-actions">
@@ -92,21 +101,29 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Songs Column */}
-        <div className="dashboard-column">
-          <h3>All Songs</h3>
-          {songs.map((song) => (
-            <Card
-              key={song.id}
-              title={song.song}
-              className="song-card"
-              onDoubleClick={() => navigate(`/song/${song.id}`)}
-            >
-              <p><strong>Singer:</strong> {song.singer}</p>
-            </Card>
-          ))}
-        </div>
+        {/* SONGS COLUMN */}
+<div className="dashboard-column">
+  <h3>All Songs</h3>
+
+  <div className="scroll-list">
+    {songs.map((song) => (
+      <Card
+        key={song.id}
+        title={song.song}
+        className="song-card"
+        onDoubleClick={() => navigate(`/song/${song.id}`)}
+      >
+        <p><strong>Singer:</strong> {song.singer}</p>
+      </Card>
+    ))}
+  </div>
+</div>
+</div>
+      <div className="dashboard-footer">
+        <small>Band Manager v2.0</small>
       </div>
+
+
     </div>
   );
 };
