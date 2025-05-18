@@ -10,6 +10,7 @@ const Dashboard = () => {
   const [events, setEvents] = useState([]);
   const [songs, setSongs] = useState([]);
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -101,26 +102,46 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* SONGS COLUMN */}
+{/* SONGS COLUMN */}
 <div className="dashboard-column">
   <h3>All Songs</h3>
 
+  {/* Search Input */}
+  <div className="form-group">
+    <input
+      type="text"
+      placeholder="Search by title or singer..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="search-input"
+    />
+  </div>
+
+  {/* Scrollable Filtered List */}
   <div className="scroll-list">
-    {songs.map((song) => (
-      <Card
-        key={song.id}
-        title={song.song}
-        className="song-card"
-        onDoubleClick={() => navigate(`/song/${song.id}`)}
-      >
-        <p><strong>Singer:</strong> {song.singer}</p>
-      </Card>
-    ))}
+    {songs
+      .filter((song) => {
+        const term = searchTerm.toLowerCase();
+        return (
+          song.song.toLowerCase().includes(term) ||
+          song.singer.toLowerCase().includes(term)
+        );
+      })
+      .map((song) => (
+        <Card
+          key={song.id}
+          title={song.song}
+          className="song-card"
+          onDoubleClick={() => navigate(`/song/${song.id}`)}
+        >
+          <p><strong>Singer:</strong> {song.singer}</p>
+        </Card>
+      ))}
   </div>
 </div>
 </div>
       <div className="dashboard-footer">
-        <small>Band Manager v2.0</small>
+        <small>Band Manager v2.1</small>
       </div>
 
 
