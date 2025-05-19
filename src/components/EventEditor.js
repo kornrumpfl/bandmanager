@@ -14,6 +14,7 @@ import "./EventEditor.css";
 
 
 const EventEditor = () => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState(null);
   const [songs, setSongs] = useState([]);
@@ -85,21 +86,35 @@ const EventEditor = () => {
           <Calendar value={eventDate} onChange={(e) => setEventDate(e.value)} showIcon />
         </div>
         <div className="form-group">
-          <label>Select Songs</label>
-          <div className="song-checkboxes">
-            {songs.map((song) => (
-              <div key={song.id} className="checkbox-item">
-                <Checkbox
-                  inputId={song.id}
-                  value={song.id}
-                  onChange={() => handleSongToggle(song.id)}
-                  checked={selectedSongIds.includes(song.id)}
-                />
-                <label htmlFor={song.id}>{song.song}</label>
-              </div>
-            ))}
-          </div>
+  <label>Select Songs</label>
+  <InputText
+    placeholder="Search by song or singer..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="search-input"
+  />
+  <div className="song-checkboxes scroll-list">
+    {songs
+      .filter((song) => {
+        const term = searchTerm.toLowerCase();
+        return (
+          song.song.toLowerCase().includes(term) ||
+          song.singer.toLowerCase().includes(term)
+        );
+      })
+      .map((song) => (
+        <div key={song.id} className="checkbox-item">
+          <Checkbox
+            inputId={song.id}
+            value={song.id}
+            onChange={() => handleSongToggle(song.id)}
+            checked={selectedSongIds.includes(song.id)}
+          />
+          <label htmlFor={song.id}>{song.song} <small>({song.singer})</small></label>
         </div>
+      ))}
+  </div>
+</div>
         <Button label="Save Event" icon="pi pi-save" className="p-button-success save-btn" onClick={handleSubmit} />
       </Card>
     </div>

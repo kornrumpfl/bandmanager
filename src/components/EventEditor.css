@@ -47,3 +47,16 @@
     }
   }
   
+  .search-input {
+  margin-bottom: 1rem;
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.scroll-list {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 4px;
+}
