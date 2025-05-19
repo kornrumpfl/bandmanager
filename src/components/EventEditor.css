@@ -2,7 +2,7 @@
 .event-editor-container {
     padding: 1rem;
     display: flex;
-    justify-content: center;
+    justify-content: left;
   }
   
   .event-editor-card {
@@ -26,7 +26,7 @@
   
   .checkbox-item {
     display: flex;
-    align-items: center;
+    align-items: left;
     gap: 0.5rem;
   }
   
@@ -59,4 +59,32 @@
   border: 1px solid #ccc;
   padding: 1rem;
   border-radius: 4px;
+}
+.history-container {
+  padding: 1rem;
+  max-width: 800px;
+  margin: auto;
+}
+
+.history-card {
+  margin-top: 2rem;
+}
+
+.custom-date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  width: 2rem;
+  border-radius: 50%;
+}
+
+.highlighted {
+  background-color: #ffc107;
+  color: black;
+  font-weight: bold;
+}
+
+.event-block {
+  margin-bottom: 1.5rem;
 }

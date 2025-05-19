@@ -2,42 +2,54 @@ import React, { useEffect, useState } from "react";
 import { Calendar } from "primereact/calendar";
 import { Card } from "primereact/card";
 import { fetchEvents } from "../services/EventService";
+import { fetchSongs } from "../services/SongService";
 import "./EventHistory.css";
 
 const EventHistory = () => {
-  const [events, setEvents] = useState([]);
   const [pastEvents, setPastEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [allSongs, setAllSongs] = useState([]);
 
   useEffect(() => {
-    const loadEvents = async () => {
-      const allEvents = await fetchEvents();
-      const now = new Date().setHours(0, 0, 0, 0);
-      const past = allEvents.filter(
-        (e) => new Date(e.date.seconds * 1000).setHours(0, 0, 0, 0) < now
-      );
-      const sorted = past.sort((a, b) => new Date(b.date.seconds * 1000) - new Date(a.date.seconds * 1000));
-      setEvents(allEvents);
-      setPastEvents(sorted);
+    const loadData = async () => {
+      const [events, songs] = await Promise.all([fetchEvents(), fetchSongs()]);
+      setAllSongs(songs);
+
+      const today = new Date().setHours(0, 0, 0, 0);
+      const past = events
+        .filter((e) => new Date(e.date.seconds * 1000).setHours(0, 0, 0, 0) < today)
+        .sort((a, b) => new Date(b.date.seconds * 1000) - new Date(a.date.seconds * 1000));
+
+      setPastEvents(past);
     };
-    loadEvents();
+
+    loadData();
   }, []);
+
+  const getSongTitle = (id) => {
+    const song = allSongs.find((s) => s.id === id);
+    return song ? song.song : "(unknown song)";
+  };
+
+  const formatDate = (ts) =>
+    new Date(ts.seconds * 1000).toLocaleDateString();
 
   const getHighlightedDates = () => {
     return pastEvents.map((e) => new Date(e.date.seconds * 1000));
   };
 
-  const formatDate = (date) => new Date(date.seconds * 1000).toLocaleDateString();
-
   const filteredByDate = selectedDate
     ? pastEvents.filter(
-        (e) => new Date(e.date.seconds * 1000).toDateString() === selectedDate.toDateString()
+        (e) =>
+          new Date(e.date.seconds * 1000).toDateString() ===
+          selectedDate.toDateString()
       )
     : [];
 
   return (
     <div className="history-container">
       <h2>Past Events</h2>
+
       <Calendar
         value={selectedDate}
         onChange={(e) => setSelectedDate(e.value)}
@@ -53,24 +65,24 @@ const EventHistory = () => {
             </div>
           );
         }}
-        
       />
 
-      {pastEvents.length > 0 && (
-        <Card title="Most Recent Past Event" className="history-card">
-          <p><strong>Name:</strong> {pastEvents[0].name}</p>
-          <p><strong>Date:</strong> {formatDate(pastEvents[0].date)}</p>
-        </Card>
-      )}
-
       {selectedDate && (
-        <Card title={`Events on ${selectedDate.toLocaleDateString()}`} className="history-card">
+        <Card
+          title={`Events on ${selectedDate.toLocaleDateString()}`}
+          className="history-card"
+        >
           {filteredByDate.length > 0 ? (
-            <ul>
-              {filteredByDate.map((e) => (
-                <li key={e.id}>{e.name}</li>
-              ))}
-            </ul>
+            filteredByDate.map((event) => (
+              <div key={event.id} className="event-block">
+                <p><strong>{event.name}</strong> — {formatDate(event.date)}</p>
+                <ul>
+                  {(event.songs || []).map((songId) => (
+                    <li key={songId}>🎵 {getSongTitle(songId)}</li>
+                  ))}
+                </ul>
+              </div>
+            ))
           ) : (
             <p>No events on this date.</p>
           )}

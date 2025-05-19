@@ -141,7 +141,7 @@ const Dashboard = () => {
 </div>
 </div>
       <div className="dashboard-footer">
-        <small>Band Manager v2.2</small>
+        <small>Band Manager v2.3</small>
       </div>
 
 
