@@ -32,6 +32,7 @@ const Song = () => {
   const [initialSongData, setInitialSongData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [combinedLyrics, setCombinedLyrics] = useState("");
+  const [holyricsContent, setHolyricsContent] = useState(""); 
   const [groupLines, setGroupLines] = useState(1);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -136,12 +137,45 @@ const Song = () => {
     setCombinedLyrics(xml.join("\n"));
   };
 
+  // Modified function to remove "Verse" and numbers
+  const generateHolyrics = () => {
+    const lines1 = songData.lyricsPT.split("\n").filter((line) => line.trim() !== "");
+    const lines2 = songData.lyricsDE.split("\n").filter((line) => line.trim() !== "");
+    
+    let text = [];
+    text.push(`${songData.song}`);
+    text.push(`${songData.singer}`);
+    text.push(""); // Empty line after metadata
+
+    for (let i = 0; i < Math.max(lines1.length, lines2.length); i += groupLines) {
+      // Verse label removed here
+      const ptGroup = lines1.slice(i, i + groupLines);
+      const deGroup = lines2.slice(i, i + groupLines);
+      
+      ptGroup.forEach(line => text.push(line));
+      deGroup.forEach(line => text.push(line));
+      
+      text.push(""); // Empty line to signal a new slide in Holyrics
+    }
+    setHolyricsContent(text.join("\n"));
+  };
+
   const saveAsXml = () => {
     const blob = new Blob([combinedLyrics], { type: "text/xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `${songData.song || "lyrics"}.xml`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const saveAsHolyrics = () => {
+    const blob = new Blob([holyricsContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${songData.song || "lyrics"}_holyrics.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -176,19 +210,30 @@ const Song = () => {
 
         <div className="button-row">
           <Button label="Save" icon="pi pi-save" onClick={handleSave} loading={loading} />
-          <Button label="Combine Lyrics" icon="pi pi-cog" onClick={combineLyrics} />
+          <Button label="Generate OpenLP" icon="pi pi-cog" onClick={combineLyrics} />
+          <Button label="Generate Holyrics" icon="pi pi-file" className="p-button-info" onClick={generateHolyrics} />
           <Button label="Close" icon="pi pi-times" className="p-button-secondary" onClick={handleClose} />
           {id && <Button label="Delete" icon="pi pi-trash" className="p-button-danger" onClick={handleDelete} />}
         </div>
 
         {combinedLyrics && (
-          <>
+          <div className="export-section">
             <div className="form-group">
-              <label>Combined Lyrics (XML)</label>
-              <InputTextarea value={combinedLyrics} rows={12} readOnly />
+              <label>Combined Lyrics (OpenLP XML)</label>
+              <InputTextarea value={combinedLyrics} rows={8} readOnly />
             </div>
-            <Button label="Save as XML" icon="pi pi-download" className="p-button-secondary" onClick={saveAsXml} />
-          </>
+            <Button label="Download XML" icon="pi pi-download" className="p-button-secondary" onClick={saveAsXml} />
+          </div>
+        )}
+
+        {holyricsContent && (
+          <div className="export-section" style={{marginTop: '1rem'}}>
+            <div className="form-group">
+              <label>Holyrics Format (Plain Text)</label>
+              <InputTextarea value={holyricsContent} rows={8} readOnly />
+            </div>
+            <Button label="Download TXT" icon="pi pi-download" className="p-button-info" onClick={saveAsHolyrics} />
+          </div>
         )}
       </Card>
     </div>
