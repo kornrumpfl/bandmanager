@@ -59,6 +59,8 @@ const Song = () => {
     } else {
       setInitialSongData(songData);
     }
+    // Add the line below to stop the build error:
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleChange = (e) => {

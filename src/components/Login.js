@@ -1,27 +1,15 @@
 // src/components/Login.js
-import React, { useState } from "react";
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth";
+import React from "react"; // Removed useState
+import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth"; // Removed signInWithEmailAndPassword
 import { useNavigate } from "react-router-dom";
-import { InputText } from "primereact/inputtext";
-import { Password } from "primereact/password";
 import { Button } from "primereact/button";
 import { Card } from "primereact/card";
 import "./Login.css";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // Removed email, password, and handleLogin as they were unused
   const auth = getAuth();
   const navigate = useNavigate();
-
-  const handleLogin = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/");
-    } catch (error) {
-      alert("Login failed: " + error.message);
-    }
-  };
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
