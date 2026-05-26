@@ -115,35 +115,35 @@ const EventEditor = () => {
           <InputText value={lyricsRole} onChange={(e) => setLyricsRole(e.target.value)} />
         </div>
         <div className="form-group">
-  <label>Select Songs</label>
-  <InputText
-    placeholder="Search by song or singer..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    className="search-input"
-  />
-  <div className="song-checkboxes scroll-list">
-    {songs
-      .filter((song) => {
-        const term = searchTerm.toLowerCase();
-        return (
-          song.song.toLowerCase().includes(term) ||
-          song.singer.toLowerCase().includes(term)
-        );
-      })
-      .map((song) => (
-        <div key={song.id} className="checkbox-item">
-          <Checkbox
-            inputId={song.id}
-            value={song.id}
-            onChange={() => handleSongToggle(song.id)}
-            checked={selectedSongIds.includes(song.id)}
+          <label>Select Songs</label>
+          <InputText
+            placeholder="Search by song or singer..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
           />
-          <label htmlFor={song.id}>{song.song} <small>({song.singer})</small></label>
+          <div className="song-checkboxes scroll-list">
+            {songs
+              .filter((song) => {
+                const term = searchTerm.toLowerCase();
+                return (
+                  song.song.toLowerCase().includes(term) ||
+                  song.singer.toLowerCase().includes(term)
+                );
+              })
+              .map((song) => (
+                <div key={song.id} className="checkbox-item">
+                  <Checkbox
+                    inputId={song.id}
+                    value={song.id}
+                    onChange={() => handleSongToggle(song.id)}
+                    checked={selectedSongIds.includes(song.id)}
+                  />
+                  <label htmlFor={song.id}>{song.song} <small>({song.singer})</small></label>
+                </div>
+              ))}
+          </div>
         </div>
-      ))}
-  </div>
-</div>
         {selectedSongIds.length > 0 && (
           <div className="form-group mt-4">
             <label>Selected Songs Order (Drag to Reorder)</label>

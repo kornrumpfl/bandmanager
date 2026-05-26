@@ -1,77 +1,149 @@
+/* src/components/Dashboard.css */
 .dashboard-container {
-  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.dashboard-header h2 {
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
 }
 
 .dashboard-columns {
   display: flex;
-  gap: 2rem;
+  gap: 2.5rem;
   flex-wrap: wrap;
+  align-items: stretch;
 }
 
 .dashboard-column {
   flex: 1 1 45%;
-  min-width: 300px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
 }
 
+.dashboard-column h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--accent-violet);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Event and Song Cards */
 .event-card,
 .song-card {
-  margin-bottom: 1.5rem;
-  cursor: pointer;
+  margin-bottom: 2rem;
+  background: var(--bg-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
 }
 
+.event-card::before,
+.song-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent-violet), var(--accent-cyan));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.event-card:hover,
+.song-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+.event-card:hover::before,
+.song-card:hover::before {
+  opacity: 1;
+}
+
+.p-card .p-card-title {
+  font-size: 1.4rem;
+  font-family: var(--font-primary);
+  margin-bottom: 0.5rem;
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.p-card .p-card-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+/* Action Buttons */
 .card-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-glass);
+}
+
+/* Clickable Song List inside Event Card */
+.clickable-song {
+  cursor: grab;
+  color: var(--text-secondary);
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.clickable-song:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-glass);
+  transform: translateX(4px);
+}
+
+.clickable-song:active {
+  cursor: grabbing;
+}
+
+.scroll-list {
+  flex: 1 1 auto;
+  height: 100%;
+  margin-bottom: 2rem;
+  min-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border-glass);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1.25rem;
+  border-radius: 12px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 @media screen and (max-width: 768px) {
   .dashboard-columns {
     flex-direction: column;
   }
-}
-
-
-
-.clickable-song {
-  cursor: pointer;
-  color: #42a5f5;
-  text-decoration: underline;
-}
-
-.clickable-song:hover {
-  color: #2196f3;
-}
-
-.scroll-list {
-  max-height: 1000px;
-  min-height: 600px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  padding: 1rem;
-  border-radius: 6px;
-}
-
-.dashboard-footer {
-  text-align: center;
-  margin-top: 3rem;
-  color: #999;
-  font-size: 0.85rem;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
 }
