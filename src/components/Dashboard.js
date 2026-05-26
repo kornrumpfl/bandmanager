@@ -4,19 +4,17 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { fetchEvents, deleteEvent, updateEvent } from "../services/EventService";
 import { fetchSongs } from "../services/SongService";
 import { generateOpenLP, generateHolyrics, sanitizeText } from "../utils/exportUtils";
 import "./Dashboard.css";
 
 const Dashboard = () => {
-  const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [songs, setSongs] = useState([]);
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   const [exportDialogVisible, setExportDialogVisible] = useState(false);
   const [selectedEventForExport, setSelectedEventForExport] = useState(null);
   const [exportFormat, setExportFormat] = useState("openlp");
@@ -28,10 +26,10 @@ const Dashboard = () => {
   ];
 
   const lineOptions = [
-    { label: t("event.single_line"), value: 1 },
-    { label: t("event.two_lines"), value: 2 },
-    { label: t("event.three_lines"), value: 3 },
-    { label: t("event.four_lines"), value: 4 },
+    { label: "Single line", value: 1 },
+    { label: "Two lines", value: 2 },
+    { label: "Three lines", value: 3 },
+    { label: "Four lines", value: 4 },
   ];
 
   useEffect(() => {
@@ -114,9 +112,9 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h2>{t("dashboard.title")}</h2>
+        <h2>Dashboard</h2>
         <Button
-          label={t("dashboard.create_event")}
+          label="Create Event"
           icon="pi pi-plus"
           className="p-button-success"
           onClick={() => navigate("/event/new")}
@@ -128,15 +126,15 @@ const Dashboard = () => {
         {/* Events Column */}
         <div className="dashboard-column">
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', minHeight: '45px' }}>
-            <h3 style={{ margin: 0 }}>{t("dashboard.upcoming_events")}</h3>
+            <h3 style={{ margin: 0 }}>Upcoming Events</h3>
           </div>
           {events.map((event) => (
             <Card key={event.id} title={event.name} className="event-card">
-              <p>{t("dashboard.date")}: {new Date(event.date.seconds * 1000).toLocaleDateString()}</p>
+              <p>Date: {new Date(event.date.seconds * 1000).toLocaleDateString()}</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
                 {/* First Column: Songs */}
                 <div style={{ flex: "2 1 200px" }}>
-                  <strong>{t("dashboard.songs")}:</strong>
+                  <strong>Songs:</strong>
                   <ul style={{ paddingLeft: "1.5rem", marginTop: "0.5rem" }}>
                     {getSongTitles(event.songs || []).map((title, index) => (
                       <li
@@ -152,7 +150,7 @@ const Dashboard = () => {
                           try {
                             const data = JSON.parse(e.dataTransfer.getData("text/plain"));
                             if (data.eventId !== event.id) return;
-                            
+
                             const fromIndex = data.fromIndex;
                             const toIndex = index;
                             if (fromIndex === toIndex) return;
@@ -186,7 +184,7 @@ const Dashboard = () => {
                 {/* Second Column: Mixer & Lyrics */}
                 <div className="event-roles" style={{ flex: "1 1 150px", display: "flex", flexDirection: "column", gap: "1rem" }}>
                   <div>
-                    <label style={{ fontSize: "0.85rem", color: "#aaa", display: "block", marginBottom: "0.2rem" }}>{t("dashboard.mixer")}</label>
+                    <label style={{ fontSize: "0.85rem", color: "#aaa", display: "block", marginBottom: "0.2rem" }}>Mixer</label>
                     <input
                       type="text"
                       className="search-input"
@@ -202,7 +200,7 @@ const Dashboard = () => {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: "0.85rem", color: "#aaa", display: "block", marginBottom: "0.2rem" }}>{t("dashboard.lyrics")}</label>
+                    <label style={{ fontSize: "0.85rem", color: "#aaa", display: "block", marginBottom: "0.2rem" }}>Lyrics</label>
                     <input
                       type="text"
                       className="search-input"
@@ -221,12 +219,12 @@ const Dashboard = () => {
               </div>
               <div className="card-actions">
                 <Button
-                  label={t("dashboard.edit")}
+                  label="Edit"
                   icon="pi pi-pencil"
                   onClick={() => navigate(`/event/${event.id}`)}
                 />
                 <Button
-                  label={t("dashboard.export_all")}
+                  label="Export All"
                   icon="pi pi-download"
                   className="p-button-info"
                   onClick={() => {
@@ -235,7 +233,7 @@ const Dashboard = () => {
                   }}
                 />
                 <Button
-                  label={t("dashboard.delete")}
+                  label="Delete"
                   icon="pi pi-trash"
                   className="p-button-danger"
                   onClick={() => handleDelete(event.id)}
@@ -245,53 +243,53 @@ const Dashboard = () => {
           ))}
         </div>
 
-{/* SONGS COLUMN */}
-{/* SONGS COLUMN */}
-<div className="dashboard-column">
-  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem', minHeight: '45px' }}>
-    <h3 style={{ margin: 0 }}>{t("dashboard.all_songs")}</h3>
-    <input
-      type="text"
-      placeholder={t("dashboard.search_placeholder")}
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="search-input"
-      style={{ marginBottom: 0, width: '250px' }}
-    />
-  </div>
+        {/* SONGS COLUMN */}
+        {/* SONGS COLUMN */}
+        <div className="dashboard-column">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', minHeight: '45px' }}>
+            <h3 style={{ margin: 0 }}>All Songs</h3>
+            <input
+              type="text"
+              placeholder="Search by title or singer..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+              style={{ marginBottom: 0, width: '250px' }}
+            />
+          </div>
 
-  {/* Scrollable Filtered List */}
-  <div className="scroll-list">
-    {songs
-      .filter((song) => {
-        const term = searchTerm.toLowerCase();
-        return (
-          song.song.toLowerCase().includes(term) ||
-          song.singer.toLowerCase().includes(term)
-        );
-      })
-      .map((song) => (
-        <Card
-          key={song.id}
-          title={song.song}
-          className="song-card"
-          onDoubleClick={() => navigate(`/song/${song.id}`)}
-        >
-          <p><strong>{t("dashboard.singer")}:</strong> {song.singer}</p>
-        </Card>
-      ))}
-  </div>
-</div>
-</div>
+          {/* Scrollable Filtered List */}
+          <div className="scroll-list">
+            {songs
+              .filter((song) => {
+                const term = searchTerm.toLowerCase();
+                return (
+                  song.song.toLowerCase().includes(term) ||
+                  song.singer.toLowerCase().includes(term)
+                );
+              })
+              .map((song) => (
+                <Card
+                  key={song.id}
+                  title={song.song}
+                  className="song-card"
+                  onDoubleClick={() => navigate(`/song/${song.id}`)}
+                >
+                  <p><strong>Singer:</strong> {song.singer}</p>
+                </Card>
+              ))}
+          </div>
+        </div>
+      </div>
 
       <Dialog
-        header={selectedEventForExport ? `${t("event.export_songs")}: ${selectedEventForExport.name}` : t("event.export_songs")}
+        header={`Export Songs: ${selectedEventForExport?.name || ""}`}
         visible={exportDialogVisible}
         style={{ width: "90vw", maxWidth: "400px" }}
         onHide={() => setExportDialogVisible(false)}
       >
         <div className="form-group">
-          <label>{t("event.format")}</label>
+          <label>Format</label>
           <Dropdown
             value={exportFormat}
             options={formatOptions}
@@ -300,7 +298,7 @@ const Dashboard = () => {
           />
         </div>
         <div className="form-group" style={{ marginTop: "1rem" }}>
-          <label>{t("event.group_lines")}</label>
+          <label>Group Lines</label>
           <Dropdown
             value={exportGroupLines}
             options={lineOptions}
@@ -309,8 +307,8 @@ const Dashboard = () => {
           />
         </div>
         <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-          <Button label={t("event.cancel")} icon="pi pi-times" className="p-button-text" onClick={() => setExportDialogVisible(false)} />
-          <Button label={t("event.download_all")} icon="pi pi-download" className="p-button-success" onClick={handleExportAll} />
+          <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => setExportDialogVisible(false)} />
+          <Button label="Download All" icon="pi pi-download" className="p-button-success" onClick={handleExportAll} />
         </div>
       </Dialog>
     </div>
