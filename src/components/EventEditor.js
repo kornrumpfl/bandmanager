@@ -8,8 +8,9 @@ import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { Checkbox } from "primereact/checkbox";
 import { fetchSongs } from "../services/SongService";
-import { addEvent, fetchEventById, updateEvent } from "../services/EventService";
+import { updateEvent, addEvent, fetchEventById } from "../services/EventService";
 import { ProgressSpinner } from "primereact/progressspinner";
+import { OrderList } from "primereact/orderlist";
 import "./EventEditor.css";
 
 
@@ -17,6 +18,8 @@ const EventEditor = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState(null);
+  const [mixer, setMixer] = useState("");
+  const [lyricsRole, setLyricsRole] = useState("");
   const [songs, setSongs] = useState([]);
   const [selectedSongIds, setSelectedSongIds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +39,8 @@ const EventEditor = () => {
           setEventName(event.name);
           setEventDate(new Date(event.date.seconds * 1000));
           setSelectedSongIds(event.songs || []);
+          setMixer(event.mixer || "");
+          setLyricsRole(event.lyricsRole || "");
         }
       }
       setLoading(false);
@@ -48,6 +53,8 @@ const EventEditor = () => {
       name: eventName,
       date: eventDate,
       songs: selectedSongIds,
+      mixer,
+      lyricsRole,
     };
 
     if (id) {
@@ -64,6 +71,20 @@ const EventEditor = () => {
       ? selectedSongIds.filter((id) => id !== songId)
       : [...selectedSongIds, songId];
     setSelectedSongIds(newSelection);
+  };
+
+  const selectedSongsObjects = selectedSongIds
+    .map((id) => songs.find((s) => s.id === id))
+    .filter(Boolean);
+
+  const itemTemplate = (item) => {
+    return (
+      <div className="flex align-items-center gap-2">
+        <span>
+          {item.song} <small>({item.singer})</small>
+        </span>
+      </div>
+    );
   };
 
   if (loading) {
@@ -84,6 +105,14 @@ const EventEditor = () => {
         <div className="form-group">
           <label>Event Date</label>
           <Calendar value={eventDate} onChange={(e) => setEventDate(e.value)} showIcon />
+        </div>
+        <div className="form-group">
+          <label>Mixer</label>
+          <InputText value={mixer} onChange={(e) => setMixer(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Lyrics</label>
+          <InputText value={lyricsRole} onChange={(e) => setLyricsRole(e.target.value)} />
         </div>
         <div className="form-group">
   <label>Select Songs</label>
@@ -115,6 +144,17 @@ const EventEditor = () => {
       ))}
   </div>
 </div>
+        {selectedSongIds.length > 0 && (
+          <div className="form-group mt-4">
+            <label>Selected Songs Order (Drag to Reorder)</label>
+            <OrderList
+              value={selectedSongsObjects}
+              onChange={(e) => setSelectedSongIds(e.value.map((s) => s.id))}
+              itemTemplate={itemTemplate}
+              dragdrop
+            />
+          </div>
+        )}
         <Button label="Save Event" icon="pi pi-save" className="p-button-success save-btn" onClick={handleSubmit} />
       </Card>
     </div>
