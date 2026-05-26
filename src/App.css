@@ -1,5 +1,44 @@
-body {
-  background-color: #1e1e2d;
-  color: white;
-  font-family: sans-serif;
+/* App.css - Global App Layout */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Base Link Styling */
+a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-violet);
+  text-shadow: 0 0 8px rgba(79, 172, 254, 0.4);
+}
+
+/* Footer Styling */
+.app-footer {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  font-family: var(--font-primary);
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  z-index: 10;
+}
+
+.app-footer p {
+  margin: 0;
+  opacity: 0.7;
 }

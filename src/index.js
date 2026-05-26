@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import "./i18n";
 import { PrimeReactProvider } from 'primereact/api';
 import "primereact/resources/themes/lara-dark-blue/theme.css";
 import 'primeflex/primeflex.css';  

@@ -4,12 +4,14 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { fetchEvents, deleteEvent, updateEvent } from "../services/EventService";
 import { fetchSongs } from "../services/SongService";
 import { generateOpenLP, generateHolyrics, sanitizeText } from "../utils/exportUtils";
 import "./Dashboard.css";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [songs, setSongs] = useState([]);
   const navigate = useNavigate();
@@ -26,10 +28,10 @@ const Dashboard = () => {
   ];
 
   const lineOptions = [
-    { label: "Single line", value: 1 },
-    { label: "Two lines", value: 2 },
-    { label: "Three lines", value: 3 },
-    { label: "Four lines", value: 4 },
+    { label: t("event.single_line"), value: 1 },
+    { label: t("event.two_lines"), value: 2 },
+    { label: t("event.three_lines"), value: 3 },
+    { label: t("event.four_lines"), value: 4 },
   ];
 
   useEffect(() => {
@@ -112,9 +114,9 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h2>Dashboard</h2>
+        <h2>{t("dashboard.title")}</h2>
         <Button
-          label="Create Event"
+          label={t("dashboard.create_event")}
           icon="pi pi-plus"
           className="p-button-success"
           onClick={() => navigate("/event/new")}
@@ -123,15 +125,18 @@ const Dashboard = () => {
 
       <div className="dashboard-columns">
         {/* Events Column */}
+        {/* Events Column */}
         <div className="dashboard-column">
-          <h3>Upcoming Events</h3>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem', minHeight: '45px' }}>
+            <h3 style={{ margin: 0 }}>{t("dashboard.upcoming_events")}</h3>
+          </div>
           {events.map((event) => (
             <Card key={event.id} title={event.name} className="event-card">
-              <p>Date: {new Date(event.date.seconds * 1000).toLocaleDateString()}</p>
+              <p>{t("dashboard.date")}: {new Date(event.date.seconds * 1000).toLocaleDateString()}</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "1rem" }}>
                 {/* First Column: Songs */}
                 <div style={{ flex: "2 1 200px" }}>
-                  <strong>Songs:</strong>
+                  <strong>{t("dashboard.songs")}:</strong>
                   <ul style={{ paddingLeft: "1.5rem", marginTop: "0.5rem" }}>
                     {getSongTitles(event.songs || []).map((title, index) => (
                       <li
@@ -181,7 +186,7 @@ const Dashboard = () => {
                 {/* Second Column: Mixer & Lyrics */}
                 <div className="event-roles" style={{ flex: "1 1 150px", display: "flex", flexDirection: "column", gap: "1rem" }}>
                   <div>
-                    <label style={{ fontSize: "0.85rem", color: "#aaa", display: "block", marginBottom: "0.2rem" }}>Mixer</label>
+                    <label style={{ fontSize: "0.85rem", color: "#aaa", display: "block", marginBottom: "0.2rem" }}>{t("dashboard.mixer")}</label>
                     <input
                       type="text"
                       className="search-input"
@@ -197,7 +202,7 @@ const Dashboard = () => {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: "0.85rem", color: "#aaa", display: "block", marginBottom: "0.2rem" }}>Lyrics</label>
+                    <label style={{ fontSize: "0.85rem", color: "#aaa", display: "block", marginBottom: "0.2rem" }}>{t("dashboard.lyrics")}</label>
                     <input
                       type="text"
                       className="search-input"
@@ -216,12 +221,12 @@ const Dashboard = () => {
               </div>
               <div className="card-actions">
                 <Button
-                  label="Edit"
+                  label={t("dashboard.edit")}
                   icon="pi pi-pencil"
                   onClick={() => navigate(`/event/${event.id}`)}
                 />
                 <Button
-                  label="Export All"
+                  label={t("dashboard.export_all")}
                   icon="pi pi-download"
                   className="p-button-info"
                   onClick={() => {
@@ -230,7 +235,7 @@ const Dashboard = () => {
                   }}
                 />
                 <Button
-                  label="Delete"
+                  label={t("dashboard.delete")}
                   icon="pi pi-trash"
                   className="p-button-danger"
                   onClick={() => handleDelete(event.id)}
@@ -241,17 +246,17 @@ const Dashboard = () => {
         </div>
 
 {/* SONGS COLUMN */}
+{/* SONGS COLUMN */}
 <div className="dashboard-column">
-  <h3>All Songs</h3>
-
-  {/* Search Input */}
-  <div className="form-group">
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem', minHeight: '45px' }}>
+    <h3 style={{ margin: 0 }}>{t("dashboard.all_songs")}</h3>
     <input
       type="text"
-      placeholder="Search by title or singer..."
+      placeholder={t("dashboard.search_placeholder")}
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
       className="search-input"
+      style={{ marginBottom: 0, width: '250px' }}
     />
   </div>
 
@@ -272,24 +277,21 @@ const Dashboard = () => {
           className="song-card"
           onDoubleClick={() => navigate(`/song/${song.id}`)}
         >
-          <p><strong>Singer:</strong> {song.singer}</p>
+          <p><strong>{t("dashboard.singer")}:</strong> {song.singer}</p>
         </Card>
       ))}
   </div>
 </div>
 </div>
-      <div className="dashboard-footer">
-        <small>Band Manager v2.4</small>
-      </div>
 
       <Dialog
-        header={`Export Songs: ${selectedEventForExport?.name || ""}`}
+        header={selectedEventForExport ? `${t("event.export_songs")}: ${selectedEventForExport.name}` : t("event.export_songs")}
         visible={exportDialogVisible}
         style={{ width: "90vw", maxWidth: "400px" }}
         onHide={() => setExportDialogVisible(false)}
       >
         <div className="form-group">
-          <label>Format</label>
+          <label>{t("event.format")}</label>
           <Dropdown
             value={exportFormat}
             options={formatOptions}
@@ -298,7 +300,7 @@ const Dashboard = () => {
           />
         </div>
         <div className="form-group" style={{ marginTop: "1rem" }}>
-          <label>Group Lines</label>
+          <label>{t("event.group_lines")}</label>
           <Dropdown
             value={exportGroupLines}
             options={lineOptions}
@@ -307,8 +309,8 @@ const Dashboard = () => {
           />
         </div>
         <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-          <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => setExportDialogVisible(false)} />
-          <Button label="Download All" icon="pi pi-download" className="p-button-success" onClick={handleExportAll} />
+          <Button label={t("event.cancel")} icon="pi pi-times" className="p-button-text" onClick={() => setExportDialogVisible(false)} />
+          <Button label={t("event.download_all")} icon="pi pi-download" className="p-button-success" onClick={handleExportAll} />
         </div>
       </Dialog>
     </div>

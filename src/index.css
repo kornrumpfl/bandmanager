@@ -1,13 +1,171 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* src/index.css - Global Design System */
+
+:root {
+  /* Color Palette - Deep Space Dark Mode with Neon Accents */
+  --bg-dark: #0a0a14;
+  --bg-surface: rgba(25, 25, 35, 0.6);
+  --bg-surface-hover: rgba(35, 35, 50, 0.7);
+  --text-primary: #f8f9fa;
+  --text-secondary: #adb5bd;
+  --accent-cyan: #00f2fe;
+  --accent-violet: #4facfe;
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --danger: #ff4b4b;
+  --success: #20c997;
+
+  /* Typography */
+  --font-primary: 'Outfit', sans-serif;
+  --font-secondary: 'Inter', sans-serif;
+
+  /* Glassmorphism settings */
+  --glass-blur: blur(16px);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  margin: 0;
+  font-family: var(--font-secondary);
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  
+  /* Animated subtle background gradient */
+  background: radial-gradient(circle at 15% 50%, rgba(79, 172, 254, 0.1), transparent 25%),
+              radial-gradient(circle at 85% 30%, rgba(0, 242, 254, 0.1), transparent 25%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-primary);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Base Form Elements Reset */
+input, textarea, select, button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Glassmorphism Utilities */
+.glass-card {
+  background: var(--bg-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+}
+
+/* PrimeReact Overrides */
+.p-card {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+.p-card-body {
+  padding: 0 !important;
+}
+
+/* PrimeReact Button Overrides - Cool Neon/Gradient Look */
+.p-button {
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  font-family: var(--font-primary) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  z-index: 1;
+}
+
+/* Light Sweep Effect */
+.p-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-25deg);
+  transition: all 0.5s ease-in-out;
+  z-index: -1;
+}
+
+.p-button:hover::before {
+  left: 150%;
+}
+
+.p-button:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.p-button:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* Specific Context Colors */
+.p-button-success {
+  background: linear-gradient(135deg, rgba(32, 201, 151, 0.8), rgba(18, 154, 115, 0.8)) !important;
+  border-color: rgba(32, 201, 151, 0.4) !important;
+}
+.p-button-success:hover {
+  box-shadow: 0 10px 20px rgba(32, 201, 151, 0.3), 0 0 20px rgba(32, 201, 151, 0.4) !important;
+}
+
+.p-button-danger {
+  background: linear-gradient(135deg, rgba(255, 75, 75, 0.8), rgba(204, 60, 60, 0.8)) !important;
+  border-color: rgba(255, 75, 75, 0.4) !important;
+}
+.p-button-danger:hover {
+  box-shadow: 0 10px 20px rgba(255, 75, 75, 0.3), 0 0 20px rgba(255, 75, 75, 0.4) !important;
+}
+
+.p-button-info {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.8), rgba(79, 172, 254, 0.8)) !important;
+  border-color: rgba(0, 242, 254, 0.4) !important;
+}
+.p-button-info:hover {
+  box-shadow: 0 10px 20px rgba(0, 242, 254, 0.3), 0 0 20px rgba(0, 242, 254, 0.4) !important;
+}
+
+/* Base input styling for consistency */
+.search-input, .p-inputtext {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--border-glass) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.search-input:focus, .p-inputtext:focus {
+  border-color: var(--accent-violet) !important;
+  box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2) !important;
+  outline: none !important;
 }

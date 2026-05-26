@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { InputText } from "primereact/inputtext";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Button } from "primereact/button";
@@ -20,6 +21,7 @@ import { sanitizeText, generateOpenLP as generateOpenLPUtil, generateHolyrics as
 import "./SongDetails.css";
 
 const Song = () => {
+  const { t } = useTranslation();
   const [songData, setSongData] = useState({
     singer: "",
     song: "",
@@ -39,10 +41,10 @@ const Song = () => {
   const navigate = useNavigate();
 
   const lineOptions = [
-    { label: "Single line", value: 1 },
-    { label: "Two lines", value: 2 },
-    { label: "Three lines", value: 3 },
-    { label: "Four lines", value: 4 },
+    { label: t("event.single_line"), value: 1 },
+    { label: t("event.two_lines"), value: 2 },
+    { label: t("event.three_lines"), value: 3 },
+    { label: t("event.four_lines"), value: 4 },
   ];
 
   useEffect(() => {
@@ -195,12 +197,12 @@ const Song = () => {
 
   return (
     <div className="song-details-container">
-      <Card title={id ? "Edit Song" : "Add New Song"}>
+      <Card title={id ? t("song.edit_title") : t("song.add_title")}>
         {[
-          { label: "Singer", name: "singer" },
-          { label: "Song Title", name: "song" },
-          { label: "Lyrics (Portuguese)", name: "lyricsPT", textarea: true },
-          { label: "Lyrics (German)", name: "lyricsDE", textarea: true, isTranslation: true },
+          { label: t("song.singer"), name: "singer" },
+          { label: t("song.song_title"), name: "song" },
+          { label: t("song.lyrics") + " (Portuguese)", name: "lyricsPT", textarea: true },
+          { label: t("song.lyrics") + " (German)", name: "lyricsDE", textarea: true, isTranslation: true },
           { label: "YouTube Link", name: "youtubeLink", isYoutube: true },
           { label: "YouTube (Family)", name: "youtubeLinkFamily" },
           { label: "Additional Notes", name: "additionalNotes", textarea: true },
@@ -233,16 +235,16 @@ const Song = () => {
         ))}
 
         <div className="form-group">
-          <label>Group Lines</label>
+          <label>{t("event.group_lines")}</label>
           <Dropdown value={groupLines} options={lineOptions} onChange={(e) => setGroupLines(e.value)} />
         </div>
 
         <div className="button-row">
-          <Button label="Save" icon="pi pi-save" onClick={handleSave} loading={loading} />
+          <Button label={t("song.save")} icon="pi pi-save" onClick={handleSave} loading={loading} />
           <Button label="Generate OpenLP" icon="pi pi-cog" onClick={combineLyrics} />
           <Button label="Generate Holyrics" icon="pi pi-file" className="p-button-info" onClick={generateHolyrics} />
-          <Button label="Close" icon="pi pi-times" className="p-button-secondary" onClick={handleClose} />
-          {id && <Button label="Delete" icon="pi pi-trash" className="p-button-danger" onClick={handleDelete} />}
+          <Button label={t("song.cancel")} icon="pi pi-times" className="p-button-secondary" onClick={handleClose} />
+          {id && <Button label={t("dashboard.delete")} icon="pi pi-trash" className="p-button-danger" onClick={handleDelete} />}
         </div>
 
         {combinedLyrics && (

@@ -2,10 +2,12 @@
 import React from "react";
 import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card } from "primereact/card";
 import { Button } from "primereact/button";
 
 const Register = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const auth = getAuth();
   const provider = new GoogleAuthProvider();
@@ -21,7 +23,7 @@ const Register = () => {
 
   return (
     <div className="login-container">
-      <Card title="Register with Google" className="login-card">
+      <Card title={t("auth.register")} className="login-card">
         <Button
           label="Sign Up with Google"
           icon="pi pi-google"
@@ -29,7 +31,7 @@ const Register = () => {
           onClick={handleGoogleRegister}
         />
         <Button
-          label="Back to Login"
+          label={t("auth.login")}
           className="p-button-secondary login-btn"
           onClick={() => navigate("/login")}
         />

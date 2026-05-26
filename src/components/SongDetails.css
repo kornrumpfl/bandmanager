@@ -1,7 +1,19 @@
+/* src/components/SongDetails.css */
+
 .song-details-container {
   padding: 1rem;
-  max-width: 800px;
+  max-width: 900px;
   margin: auto;
+}
+
+.song-details-container .p-card {
+  background: var(--bg-surface) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
+  padding: 1.5rem;
 }
 
 .form-group {
@@ -10,31 +22,69 @@
   flex-direction: column;
 }
 
+.form-group label {
+  font-family: var(--font-primary);
+  color: var(--accent-violet);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  display: block;
+}
+
+.form-group textarea.p-inputtextarea {
+  min-height: 150px;
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--border-glass) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  padding: 1rem !important;
+  resize: vertical;
+}
+
+.form-group textarea.p-inputtextarea:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 0 2px rgba(0, 242, 254, 0.2) !important;
+}
+
 .video-preview {
   margin-top: 1rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  border: 1px solid var(--border-glass);
 }
 
 .button-row {
   display: flex;
   justify-content: space-between;
-  margin-top: 2rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-glass);
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+/* Make primary buttons pop */
+.button-row .p-button-success {
+  background: linear-gradient(135deg, var(--success) 0%, #129a73 100%) !important;
+  border: none !important;
+}
+
+.button-row .p-button-danger {
+  background: linear-gradient(135deg, var(--danger) 0%, #cc3c3c 100%) !important;
+  border: none !important;
+}
+
+.button-row .p-button {
+  flex: 1 1 auto;
+  justify-content: center;
 }
 
 @media screen and (max-width: 600px) {
   .song-details-container {
     padding: 1rem;
   }
-
   .button-row {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
   }
 }

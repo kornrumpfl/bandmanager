@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Calendar } from "primereact/calendar";
 import { Card } from "primereact/card";
+import { useTranslation } from "react-i18next";
 import { fetchEvents } from "../services/EventService";
 import { fetchSongs } from "../services/SongService";
 import "./EventHistory.css";
 
 const EventHistory = () => {
+  const { t } = useTranslation();
   const [pastEvents, setPastEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [allSongs, setAllSongs] = useState([]);
@@ -48,7 +50,7 @@ const EventHistory = () => {
 
   return (
     <div className="history-container">
-      <h2>Past Events</h2>
+      <h2>{t("history.title")}</h2>
 
       <Calendar
         value={selectedDate}
@@ -69,7 +71,7 @@ const EventHistory = () => {
 
       {selectedDate && (
         <Card
-          title={`Events on ${selectedDate.toLocaleDateString()}`}
+          title={`${t("history.title")} - ${selectedDate.toLocaleDateString()}`}
           className="history-card"
         >
           {filteredByDate.length > 0 ? (

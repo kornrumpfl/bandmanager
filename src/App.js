@@ -24,6 +24,9 @@ const AppLayout = () => {
           <Route path="/history" element={<EventHistory />} />
         </Routes>
       </div>
+      <footer className="app-footer">
+        <p>Band Manager v3.0.0</p>
+      </footer>
     </div>
   );
 };
