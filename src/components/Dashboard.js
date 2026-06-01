@@ -26,6 +26,7 @@ const Dashboard = () => {
   ];
 
   const lineOptions = [
+    { label: "Original Format (Respect Spaces)", value: 0 },
     { label: "Single line", value: 1 },
     { label: "Two lines", value: 2 },
     { label: "Three lines", value: 3 },

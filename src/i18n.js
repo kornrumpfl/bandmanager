@@ -56,7 +56,8 @@ const resources = {
         "single_line": "Single line",
         "two_lines": "Two lines",
         "three_lines": "Three lines",
-        "four_lines": "Four lines"
+        "four_lines": "Four lines",
+        "original_format": "As Pasted (Respect Spaces)"
       },
       "history": {
         "title": "Event History",
@@ -126,7 +127,8 @@ const resources = {
         "single_line": "Uma linha",
         "two_lines": "Duas linhas",
         "three_lines": "Três linhas",
-        "four_lines": "Quatro linhas"
+        "four_lines": "Quatro linhas",
+        "original_format": "Como Colado (Respeitar Espaços)"
       },
       "history": {
         "title": "Histórico de Eventos",
@@ -196,7 +198,8 @@ const resources = {
         "single_line": "Einzelne Zeile",
         "two_lines": "Zwei Zeilen",
         "three_lines": "Drei Zeilen",
-        "four_lines": "Vier Zeilen"
+        "four_lines": "Vier Zeilen",
+        "original_format": "Wie eingefügt (Abstände beibehalten)"
       },
       "history": {
         "title": "Ereignisverlauf",
@@ -266,7 +269,8 @@ const resources = {
         "single_line": "Una línea",
         "two_lines": "Dos líneas",
         "three_lines": "Tres líneas",
-        "four_lines": "Cuatro líneas"
+        "four_lines": "Cuatro líneas",
+        "original_format": "Como pegado (Respetar espacios)"
       },
       "history": {
         "title": "Historial de eventos",
