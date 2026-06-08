@@ -41,6 +41,7 @@ const Song = () => {
   const navigate = useNavigate();
 
   const lineOptions = [
+    { label: t("event.original_format", "As Pasted (Respect Spaces)"), value: 0 },
     { label: t("event.single_line"), value: 1 },
     { label: t("event.two_lines"), value: 2 },
     { label: t("event.three_lines"), value: 3 },

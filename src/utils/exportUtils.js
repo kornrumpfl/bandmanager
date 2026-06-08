@@ -7,8 +7,6 @@ export const sanitizeText = (text) => {
 export const generateOpenLP = (songData, groupLines) => {
   const lyricsPT = songData.lyricsPT || "";
   const lyricsDE = songData.lyricsDE || "";
-  const lines1 = lyricsPT.split("\n").filter((line) => line.trim() !== "");
-  const lines2 = lyricsDE.split("\n").filter((line) => line.trim() !== "");
   const xml = [];
 
   xml.push(`<?xml version='1.0' encoding='UTF-8'?>`);
@@ -21,14 +19,34 @@ export const generateOpenLP = (songData, groupLines) => {
   xml.push(`  <lyrics>`);
 
   let count = 1;
-  for (let i = 0; i < Math.max(lines1.length, lines2.length); i += groupLines) {
-    const pt = lines1.slice(i, i + groupLines).join("<br/>");
-    const de = lines2.slice(i, i + groupLines).join("<br/>");
-    if (pt || de) {
-      xml.push(
-        `    <verse name="v${count}"><lines>${pt}${pt && de ? '<br/>' : ''}<tag name="tr1">${de}</tag></lines></verse>`
-      );
-      count++;
+
+  if (groupLines === 0) {
+    const blocks1 = lyricsPT.split(/\n\s*\n/).filter(b => b.trim() !== "");
+    const blocks2 = lyricsDE.split(/\n\s*\n/).filter(b => b.trim() !== "");
+    
+    for (let i = 0; i < Math.max(blocks1.length, blocks2.length); i++) {
+      const pt = (blocks1[i] || "").replace(/\n/g, "<br/>");
+      const de = (blocks2[i] || "").replace(/\n/g, "<br/>");
+      if (pt || de) {
+        xml.push(
+          `    <verse name="v${count}"><lines>${pt}${pt && de ? '<br/>' : ''}<tag name="tr1">${de}</tag></lines></verse>`
+        );
+        count++;
+      }
+    }
+  } else {
+    const lines1 = lyricsPT.split("\n").filter((line) => line.trim() !== "");
+    const lines2 = lyricsDE.split("\n").filter((line) => line.trim() !== "");
+
+    for (let i = 0; i < Math.max(lines1.length, lines2.length); i += groupLines) {
+      const pt = lines1.slice(i, i + groupLines).join("<br/>");
+      const de = lines2.slice(i, i + groupLines).join("<br/>");
+      if (pt || de) {
+        xml.push(
+          `    <verse name="v${count}"><lines>${pt}${pt && de ? '<br/>' : ''}<tag name="tr1">${de}</tag></lines></verse>`
+        );
+        count++;
+      }
     }
   }
 
@@ -40,22 +58,39 @@ export const generateOpenLP = (songData, groupLines) => {
 export const generateHolyrics = (songData, groupLines) => {
   const lyricsPT = songData.lyricsPT || "";
   const lyricsDE = songData.lyricsDE || "";
-  const lines1 = lyricsPT.split("\n").filter((line) => line.trim() !== "");
-  const lines2 = lyricsDE.split("\n").filter((line) => line.trim() !== "");
   
   let text = [];
   text.push(`${sanitizeText(songData.song)}`);
   text.push(`${sanitizeText(songData.singer)}`);
   text.push("");
 
-  for (let i = 0; i < Math.max(lines1.length, lines2.length); i += groupLines) {
-    const ptGroup = lines1.slice(i, i + groupLines);
-    const deGroup = lines2.slice(i, i + groupLines);
+  if (groupLines === 0) {
+    const blocks1 = lyricsPT.split(/\n\s*\n/).filter(b => b.trim() !== "");
+    const blocks2 = lyricsDE.split(/\n\s*\n/).filter(b => b.trim() !== "");
     
-    ptGroup.forEach(line => text.push(line));
-    deGroup.forEach(line => text.push(line));
-    
-    text.push(""); 
+    for (let i = 0; i < Math.max(blocks1.length, blocks2.length); i++) {
+      const ptGroup = (blocks1[i] || "").split("\n").filter(l => l.trim() !== "");
+      const deGroup = (blocks2[i] || "").split("\n").filter(l => l.trim() !== "");
+      
+      ptGroup.forEach(line => text.push(line));
+      deGroup.forEach(line => text.push(line));
+      
+      text.push(""); 
+    }
+  } else {
+    const lines1 = lyricsPT.split("\n").filter((line) => line.trim() !== "");
+    const lines2 = lyricsDE.split("\n").filter((line) => line.trim() !== "");
+
+    for (let i = 0; i < Math.max(lines1.length, lines2.length); i += groupLines) {
+      const ptGroup = lines1.slice(i, i + groupLines);
+      const deGroup = lines2.slice(i, i + groupLines);
+      
+      ptGroup.forEach(line => text.push(line));
+      deGroup.forEach(line => text.push(line));
+      
+      text.push(""); 
+    }
   }
+  
   return text.join("\n");
 };
