@@ -8,6 +8,8 @@ import EventHistory from "./components/EventHistory";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import PrivateRoute from "./components/PrivateRoute";
+import Projection from "./components/Projection";
+import ProjectorWindow from "./components/ProjectorWindow";
 import "./App.css";
 
 const AppLayout = () => {
@@ -22,10 +24,11 @@ const AppLayout = () => {
           <Route path="/event/new" element={<EventEditor />} />
           <Route path="/event/:id" element={<EventEditor />} />
           <Route path="/history" element={<EventHistory />} />
+          <Route path="/projection" element={<Projection />} />
         </Routes>
       </div>
       <footer className="app-footer">
-        <p>Band Manager v3.0.0</p>
+        <p>Band Manager v4.0.0</p>
       </footer>
     </div>
   );
@@ -37,6 +40,7 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/projector" element={<ProjectorWindow />} />
         <Route path="/*" element={<PrivateRoute><AppLayout /></PrivateRoute>} />
       </Routes>
     </Router>
