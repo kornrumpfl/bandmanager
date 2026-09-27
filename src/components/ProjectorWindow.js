@@ -3,15 +3,19 @@ import "./ProjectorWindow.css";
 
 const ProjectorWindow = () => {
   const [currentBlock, setCurrentBlock] = useState(null);
+  const [fontSize, setFontSize] = useState("5vh");
 
   useEffect(() => {
     // Listen for projection updates
     const bc = new BroadcastChannel('projection_sync');
     bc.onmessage = (event) => {
       if (event.data.type === 'UPDATE_LYRICS') {
-        setCurrentBlock(event.data.payload);
+        setCurrentBlock(event.data.payload.block);
+        if (event.data.payload.fontSize) setFontSize(event.data.payload.fontSize);
       } else if (event.data.type === 'CLEAR_LYRICS') {
         setCurrentBlock(null);
+      } else if (event.data.type === 'UPDATE_CONFIG') {
+        if (event.data.payload.fontSize) setFontSize(event.data.payload.fontSize);
       }
     };
     
@@ -39,7 +43,7 @@ const ProjectorWindow = () => {
   return (
     <div className="projector-container">
       {currentBlock && (
-        <div className="lyrics-block">
+        <div className="lyrics-block" style={{ fontSize: fontSize }}>
           {currentBlock.pt && currentBlock.pt.map((line, i) => (
             <div key={`pt-${i}`} className="lyric-line pt-line">{line}</div>
           ))}
