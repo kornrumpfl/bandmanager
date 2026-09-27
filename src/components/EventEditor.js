@@ -79,10 +79,20 @@ const EventEditor = () => {
 
   const itemTemplate = (item) => {
     return (
-      <div className="flex align-items-center gap-2">
+      <div className="flex align-items-center justify-content-between gap-2" style={{ width: '100%' }}>
         <span>
           {item.song} <small>({item.singer})</small>
         </span>
+        <Button 
+          type="button"
+          icon="pi pi-times" 
+          className="p-button-rounded p-button-danger p-button-text p-button-sm" 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSongToggle(item.id);
+          }}
+          title="Remove song"
+        />
       </div>
     );
   };
