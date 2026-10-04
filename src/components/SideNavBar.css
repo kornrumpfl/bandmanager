@@ -22,9 +22,6 @@
   align-items: center;
 }
 
-.nav-left {
-  /* Empty spacer to balance the grid */
-}
 
 .main-nav-links {
   display: flex;

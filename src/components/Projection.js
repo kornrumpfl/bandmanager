@@ -16,6 +16,7 @@ const Projection = () => {
   const [groupLines, setGroupLines] = useState(0);
   const [projectionActive, setProjectionActive] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
+  const [fontSize, setFontSize] = useState(5);
   
   const bcRef = useRef(null);
   const projectionWindowRef = useRef(null);
@@ -41,6 +42,15 @@ const Projection = () => {
     label: `${new Date(e.date.seconds * 1000).toLocaleDateString()} - ${e.name}`,
     value: e
   }));
+
+  const fontSizeOptions = [
+    { label: 'Very Small', value: 3 },
+    { label: 'Small', value: 4 },
+    { label: 'Medium', value: 5 },
+    { label: 'Large', value: 6 },
+    { label: 'Very Large', value: 7 },
+    { label: 'Huge', value: 8 },
+  ];
 
   const groupLinesOptions = [
     { label: 'Original Format (Respect Spaces)', value: 0 },
@@ -87,9 +97,15 @@ const Projection = () => {
     if (!projectionActive) return;
     setSelectedBlockId(block.id);
     if (bcRef.current) {
-      bcRef.current.postMessage({ type: 'UPDATE_LYRICS', payload: block });
+      bcRef.current.postMessage({ type: 'UPDATE_LYRICS', payload: { block, fontSize: `${fontSize}vh` } });
     }
   };
+
+  useEffect(() => {
+    if (bcRef.current && projectionActive) {
+      bcRef.current.postMessage({ type: 'UPDATE_CONFIG', payload: { fontSize: `${fontSize}vh` } });
+    }
+  }, [fontSize, projectionActive]);
 
   const eventSongs = selectedEvent && selectedEvent.songs 
     ? selectedEvent.songs.map(id => songs.find(s => s.id === id)).filter(Boolean)
@@ -157,14 +173,25 @@ const Projection = () => {
       </div>
 
       <div className="projection-right">
-        <div className="group-lines-control">
-          <label>Group Lines</label>
-          <Dropdown 
-            value={groupLines} 
-            options={groupLinesOptions} 
-            onChange={(e) => setGroupLines(e.value)} 
-            className="w-full"
-          />
+        <div style={{ display: 'flex', gap: '20px', justifyContent: 'flex-end', width: '100%' }}>
+          <div className="group-lines-control" style={{ width: '150px' }}>
+            <label>Font Size</label>
+            <Dropdown 
+              value={fontSize} 
+              options={fontSizeOptions} 
+              onChange={(e) => setFontSize(e.value)} 
+              className="w-full"
+            />
+          </div>
+          <div className="group-lines-control">
+            <label>Group Lines</label>
+            <Dropdown 
+              value={groupLines} 
+              options={groupLinesOptions} 
+              onChange={(e) => setGroupLines(e.value)} 
+              className="w-full"
+            />
+          </div>
         </div>
 
         <div className="lyrics-preview-container">
