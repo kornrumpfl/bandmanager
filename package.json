@@ -22,6 +22,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "whisper": "python server/whisper_server.py",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

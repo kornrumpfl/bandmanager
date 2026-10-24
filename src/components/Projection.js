@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { fetchEvents } from "../services/EventService";
 import { fetchSongs } from "../services/SongService";
 import { getLyricsBlocks } from "../utils/projectionUtils";
-import { useTranslation } from "react-i18next";
+import { useLiveLyricFollower } from "../hooks/useLiveLyricFollower";
+import { useLocalWhisperFollower } from "../hooks/useLocalWhisperFollower";
+import { useAudioInput } from "../hooks/useAudioInput";
+import { renderHighlightedLine } from "../utils/lyricsMatcher";
 import "./Projection.css";
 
 const Projection = () => {
-  const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [songs, setSongs] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -17,9 +19,39 @@ const Projection = () => {
   const [projectionActive, setProjectionActive] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [fontSize, setFontSize] = useState(5);
+  const [listenLanguage, setListenLanguage] = useState("pt-BR");
+  const [showDeviceTip, setShowDeviceTip] = useState(false);
+  const [autoChangeSlide, setAutoChangeSlide] = useState(true);
+  const [testTextInput, setTestTextInput] = useState("");
+  const [engineType, setEngineType] = useState(() => {
+    return localStorage.getItem("band_lyric_engine") || "local-whisper";
+  });
+  const [whisperServerUrl, setWhisperServerUrl] = useState(() => {
+    return localStorage.getItem("band_whisper_server_url") || "http://127.0.0.1:5001";
+  });
+  const [showServerConfig, setShowServerConfig] = useState(false);
+  const [serverUrlInput, setServerUrlInput] = useState(() => {
+    return localStorage.getItem("band_whisper_server_url") || "http://127.0.0.1:5001";
+  });
   
   const bcRef = useRef(null);
   const projectionWindowRef = useRef(null);
+
+  // Audio capture device hook with real-time VU meter
+  const {
+    devices: audioDevices,
+    selectedDeviceId,
+    selectedDevice,
+    setSelectedDeviceId,
+    audioLevel,
+    isAudioActive,
+    isMonitoring,
+    mediaStream,
+    deviceError,
+    refreshDevices,
+    startMonitoring,
+    stopMonitoring,
+  } = useAudioInput();
 
   useEffect(() => {
     const loadData = async () => {
@@ -60,6 +92,86 @@ const Projection = () => {
     { label: '4 Lines', value: 4 }
   ];
 
+  const lyricsBlocks = selectedSong ? getLyricsBlocks(selectedSong, groupLines) : [];
+
+  const handleAutoFollowSelect = useCallback((block, tokens) => {
+    if (autoChangeSlide) {
+      setSelectedBlockId(block.id);
+      if (bcRef.current) {
+        bcRef.current.postMessage({ 
+          type: 'UPDATE_LYRICS', 
+          payload: { block, fontSize: `${fontSize}vh`, highlightedWords: tokens || [] } 
+        });
+      }
+      const el = document.getElementById(`block-${block.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [autoChangeSlide, fontSize]);
+
+  const handleWordsMatched = useCallback((tokens) => {
+    if (bcRef.current) {
+      bcRef.current.postMessage({
+        type: 'UPDATE_HIGHLIGHT',
+        payload: { highlightedWords: tokens }
+      });
+    }
+  }, []);
+
+  // Web Speech API Follower (Chrome built-in)
+  const webSpeechFollower = useLiveLyricFollower({
+    blocks: lyricsBlocks,
+    currentBlockId: selectedBlockId,
+    onBlockSelect: handleAutoFollowSelect,
+    onWordsMatched: handleWordsMatched,
+    language: listenLanguage,
+    minConfidence: 0.35,
+  });
+
+  // Local Offline Whisper Follower (Runs on CPU with int8 quantization)
+  const localWhisperFollower = useLocalWhisperFollower({
+    stream: mediaStream,
+    blocks: lyricsBlocks,
+    currentBlockId: selectedBlockId,
+    selectedSong,
+    onBlockSelect: handleAutoFollowSelect,
+    onWordsMatched: handleWordsMatched,
+    language: listenLanguage.startsWith("de") ? "de" : listenLanguage.startsWith("pt") ? "pt" : "en",
+    serverUrl: whisperServerUrl,
+    minConfidence: 0.35,
+  });
+
+  const isLocalEngine = engineType === "local-whisper";
+  const isAutoFollowEnabled = isLocalEngine ? localWhisperFollower.isListening : webSpeechFollower.isEnabled;
+  const isListening = isLocalEngine ? localWhisperFollower.isListening : webSpeechFollower.isListening;
+  const lastTranscript = isLocalEngine ? localWhisperFollower.lastTranscript : webSpeechFollower.lastTranscript;
+  const lastMatch = isLocalEngine ? localWhisperFollower.lastMatch : webSpeechFollower.lastMatch;
+  const highlightedWords = isLocalEngine ? localWhisperFollower.highlightedWords : webSpeechFollower.highlightedWords;
+  const processText = isLocalEngine ? localWhisperFollower.processText : webSpeechFollower.processText;
+  const isSupported = isLocalEngine ? true : webSpeechFollower.isSupported;
+  const activeError = isLocalEngine
+    ? (localWhisperFollower.errorMessage || deviceError)
+    : (webSpeechFollower.errorMessage || deviceError || (webSpeechFollower.lastError && webSpeechFollower.lastError !== "no-speech" ? `Speech engine: ${webSpeechFollower.lastError}` : ""));
+
+  const handleToggleAutoFollow = async () => {
+    if (isAutoFollowEnabled) {
+      if (isLocalEngine) {
+        localWhisperFollower.stopListening();
+      } else {
+        webSpeechFollower.stopListening();
+      }
+      stopMonitoring();
+    } else {
+      const stream = await startMonitoring(selectedDeviceId);
+      if (isLocalEngine) {
+        localWhisperFollower.startListening(stream);
+      } else {
+        webSpeechFollower.startListening();
+      }
+    }
+  };
+
   const handleStart = async () => {
     setProjectionActive(true);
     try {
@@ -83,6 +195,13 @@ const Projection = () => {
 
   const handleStop = () => {
     setProjectionActive(false);
+    if (localWhisperFollower.isListening) {
+      localWhisperFollower.stopListening();
+    }
+    if (webSpeechFollower.isEnabled) {
+      webSpeechFollower.stopListening();
+    }
+    stopMonitoring();
     if (projectionWindowRef.current) {
       projectionWindowRef.current.close();
       projectionWindowRef.current = null;
@@ -94,10 +213,12 @@ const Projection = () => {
   };
 
   const handleBlockClick = (block) => {
-    if (!projectionActive) return;
     setSelectedBlockId(block.id);
     if (bcRef.current) {
-      bcRef.current.postMessage({ type: 'UPDATE_LYRICS', payload: { block, fontSize: `${fontSize}vh` } });
+      bcRef.current.postMessage({ 
+        type: 'UPDATE_LYRICS', 
+        payload: { block, fontSize: `${fontSize}vh`, highlightedWords } 
+      });
     }
   };
 
@@ -107,11 +228,17 @@ const Projection = () => {
     }
   }, [fontSize, projectionActive]);
 
+  useEffect(() => {
+    if (!selectedSong && isAutoFollowEnabled) {
+      if (localWhisperFollower.isListening) localWhisperFollower.stopListening();
+      if (webSpeechFollower.isEnabled) webSpeechFollower.stopListening();
+      stopMonitoring();
+    }
+  }, [selectedSong, isAutoFollowEnabled, localWhisperFollower, webSpeechFollower, stopMonitoring]);
+
   const eventSongs = selectedEvent && selectedEvent.songs 
     ? selectedEvent.songs.map(id => songs.find(s => s.id === id)).filter(Boolean)
     : [];
-
-  const lyricsBlocks = selectedSong ? getLyricsBlocks(selectedSong, groupLines) : [];
 
   return (
     <div className="projection-container">
@@ -149,6 +276,384 @@ const Projection = () => {
               </div>
             ))}
             {eventSongs.length === 0 && <p className="no-songs">No songs for this event.</p>}
+          </div>
+        </div>
+
+        {/* Live Audio Auto-Follow Section */}
+        <div className="autofollow-card">
+          <div className="autofollow-header">
+            <div className="autofollow-title">
+              <i className="pi pi-microphone" style={{ color: isListening ? '#22c55e' : '#64748b' }} />
+              <span>Live Lyric Follow</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {isLocalEngine && localWhisperFollower.isTranscribing && (
+                <span className="ai-transcribing-badge">
+                  <i className="pi pi-spin pi-spinner" style={{ fontSize: '0.7rem' }} /> AI
+                </span>
+              )}
+              {isAutoFollowEnabled && (
+                <span style={{ fontSize: '0.72rem', color: isListening ? '#16a34a' : '#d97706', fontWeight: 600 }}>
+                  {isListening ? (localWhisperFollower.isTranscribing ? "Transcribing..." : "Listening") : "Active"}
+                </span>
+              )}
+              {isListening && <span className="listening-pulse" title="Speech engine active..." />}
+            </div>
+          </div>
+
+          <div className="autofollow-body">
+            {/* Tracking Engine Selector */}
+            <div className="form-group" style={{ marginBottom: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Tracking Engine</label>
+                {isLocalEngine && (
+                  <span className={`engine-badge ${localWhisperFollower.isServerOnline ? 'online' : 'offline'}`}>
+                    {localWhisperFollower.isServerOnline ? '● Whisper Online' : '● Server Offline'}
+                  </span>
+                )}
+              </div>
+              <Dropdown
+                value={engineType}
+                options={[
+                  { label: "🤖 Local AI (Whisper Offline) - Fast & Accurate", value: "local-whisper" },
+                  { label: "🌐 Browser Web Speech API (Chrome Built-in)", value: "web-speech" }
+                ]}
+                onChange={(e) => {
+                  if (isAutoFollowEnabled) {
+                    handleToggleAutoFollow();
+                  }
+                  setEngineType(e.value);
+                  localStorage.setItem("band_lyric_engine", e.value);
+                }}
+                className="w-full"
+              />
+            </div>
+
+            {/* Network / Local Server Address indicator and config */}
+            {isLocalEngine && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', fontSize: '0.74rem' }}>
+                <span style={{ color: '#64748b' }}>
+                  AI Server: <code style={{ color: '#0284c7', background: '#e0f2fe', padding: '1px 5px', borderRadius: '3px' }}>{whisperServerUrl}</code>
+                </span>
+                <button
+                  type="button"
+                  style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.73rem', textDecoration: 'underline', padding: 0 }}
+                  onClick={() => setShowServerConfig(prev => !prev)}
+                >
+                  {showServerConfig ? "Hide Config" : "Change IP / Network"}
+                </button>
+              </div>
+            )}
+
+            {isLocalEngine && showServerConfig && (
+              <div className="server-config-card" style={{ marginBottom: '10px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                  AI Server Address (Network IP or Localhost):
+                </label>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+                  <input
+                    type="text"
+                    value={serverUrlInput}
+                    onChange={(e) => setServerUrlInput(e.target.value)}
+                    placeholder="http://192.168.1.100:5001"
+                    className="test-voice-input"
+                    style={{ fontSize: '0.78rem' }}
+                  />
+                  <Button
+                    type="button"
+                    icon="pi pi-check"
+                    label="Apply"
+                    className="p-button-sm"
+                    style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                    onClick={() => {
+                      let clean = serverUrlInput.trim().replace(/\/+$/, '');
+                      if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+                        clean = 'http://' + clean;
+                      }
+                      setWhisperServerUrl(clean);
+                      localStorage.setItem("band_whisper_server_url", clean);
+                      setShowServerConfig(false);
+                      setTimeout(() => localWhisperFollower.checkServerHealth(), 100);
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className="quick-ip-btn"
+                    onClick={() => {
+                      setServerUrlInput("http://127.0.0.1:5001");
+                      setWhisperServerUrl("http://127.0.0.1:5001");
+                      localStorage.setItem("band_whisper_server_url", "http://127.0.0.1:5001");
+                      setTimeout(() => localWhisperFollower.checkServerHealth(), 100);
+                    }}
+                  >
+                    Reset to Localhost (127.0.0.1)
+                  </button>
+                </div>
+                <small style={{ color: '#64748b', fontSize: '0.7rem', display: 'block', marginTop: '6px', lineHeight: 1.3 }}>
+                  💡 <strong>Network PC:</strong> If running on another PC in your church network (e.g. soundboard or media desktop with GPU), enter its local IP address (like <code>http://192.168.1.50:5001</code>).
+                </small>
+              </div>
+            )}
+
+            {/* Offline Whisper alert or online banner */}
+            {isLocalEngine && !localWhisperFollower.isServerOnline && (
+              <div className="whisper-offline-alert" style={{ marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <i className="pi pi-exclamation-triangle" style={{ color: '#ef4444' }} />
+                  <strong>Cannot reach Whisper server at {whisperServerUrl}</strong>
+                </div>
+                <p style={{ margin: '4px 0 2px 0', fontSize: '0.74rem' }}>
+                  {whisperServerUrl.includes('127.0.0.1') || whisperServerUrl.includes('localhost') ? (
+                    <>Start your local model in terminal: <code>npm run whisper</code></>
+                  ) : (
+                    <>Verify the AI server computer on your network is running on port 5001.</>
+                  )}
+                </p>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                  <Button
+                    type="button"
+                    icon="pi pi-refresh"
+                    label="Retry Connection"
+                    className="p-button-outlined p-button-danger p-button-sm"
+                    style={{ fontSize: '0.73rem', padding: '4px 8px' }}
+                    onClick={() => localWhisperFollower.checkServerHealth()}
+                  />
+                  <Button
+                    type="button"
+                    icon="pi pi-cog"
+                    label="Change IP Address"
+                    className="p-button-outlined p-button-secondary p-button-sm"
+                    style={{ fontSize: '0.73rem', padding: '4px 8px' }}
+                    onClick={() => setShowServerConfig(true)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {isLocalEngine && localWhisperFollower.isServerOnline && (
+              <div className="whisper-online-banner" style={{ marginBottom: '10px' }}>
+                <i className="pi pi-check-circle" />
+                <span>AI ready at {whisperServerUrl}: captures directly from selected sound card with zero cloud lag.</span>
+              </div>
+            )}
+
+            {/* Sound Capture Device Search & Select */}
+            <div className="form-group" style={{ marginBottom: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '0.82rem' }}>Sound Capture Device</label>
+                <button 
+                  type="button" 
+                  className="refresh-devices-btn" 
+                  onClick={refreshDevices}
+                  title="Refresh sound devices"
+                >
+                  <i className="pi pi-refresh" style={{ fontSize: '0.75rem' }} />
+                </button>
+              </div>
+              <Dropdown
+                value={selectedDeviceId}
+                options={audioDevices}
+                onChange={(e) => setSelectedDeviceId(e.value)}
+                placeholder="Search sound device..."
+                filter
+                filterPlaceholder="Search device..."
+                className="w-full"
+                emptyMessage="No audio devices found."
+              />
+            </div>
+
+            {/* Live VU Volume Meter */}
+            <div className="audio-meter-container" style={{ marginBottom: '10px' }}>
+              <div className="audio-meter-header">
+                <span className="meter-label">Audio Level</span>
+                <span className={`meter-status ${isAudioActive ? 'active' : ''}`}>
+                  {isAudioActive ? '● Sound Detected' : (isMonitoring ? 'Listening (Silent)' : 'Meter Inactive')}
+                </span>
+              </div>
+              <div className="audio-meter-track">
+                <div 
+                  className={`audio-meter-fill ${audioLevel > 80 ? 'peak' : audioLevel > 50 ? 'mid' : 'normal'}`} 
+                  style={{ width: `${audioLevel}%` }} 
+                />
+              </div>
+            </div>
+
+            {/* Test & Tip actions */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+              <Button
+                type="button"
+                icon={isMonitoring && !isAutoFollowEnabled ? "pi pi-volume-off" : "pi pi-volume-up"}
+                label={isMonitoring && !isAutoFollowEnabled ? "Stop Test" : "Test Sound"}
+                className="p-button-outlined p-button-secondary p-button-sm"
+                style={{ flex: 1, fontSize: '0.78rem', padding: '6px' }}
+                onClick={() => {
+                  if (isMonitoring && !isAutoFollowEnabled) {
+                    stopMonitoring();
+                  } else {
+                    startMonitoring(selectedDeviceId);
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                icon="pi pi-question-circle"
+                label="Setup Tip"
+                className="p-button-outlined p-button-secondary p-button-sm"
+                style={{ fontSize: '0.78rem', padding: '6px' }}
+                onClick={() => setShowDeviceTip(prev => !prev)}
+                title="How to configure this device in Chrome"
+              />
+            </div>
+
+            {showDeviceTip && (
+              <div className="chrome-device-tip" style={{ marginBottom: '10px' }}>
+                <div className="tip-header">
+                  <i className="pi pi-info-circle" />
+                  <span>Configuring {selectedDevice ? selectedDevice.label : 'Sound Card'}:</span>
+                </div>
+                <ol>
+                  <li><strong>Local Whisper AI Engine (Recommended):</strong> Directly reads your selected device! No Windows default settings required.</li>
+                  <li><strong>Browser Web Speech API:</strong> Chrome locks to Windows Default Recording Device (<kbd>Win + R</kbd> &rarr; <code>mmsys.cpl</code>).</li>
+                  <li>Verify that <strong>Singing Language</strong> below matches what is being sung.</li>
+                </ol>
+              </div>
+            )}
+
+            {/* Auto-Advance Projected Box Feature */}
+            <div className="autofollow-feature-row" style={{ marginBottom: '10px' }}>
+              <div className="feature-info">
+                <span className="feature-title">Auto-Advance Lyrics Box</span>
+                <span className="feature-desc">Automatically switch slide when next verse/chorus is sung</span>
+              </div>
+              <button
+                type="button"
+                className={`toggle-switch-btn ${autoChangeSlide ? 'active' : ''}`}
+                onClick={() => setAutoChangeSlide(prev => !prev)}
+                title="Toggle automatic slide advancing"
+              >
+                {autoChangeSlide ? "ON" : "OFF"}
+              </button>
+            </div>
+
+            {/* Singing Language Selection */}
+            <div className="form-group" style={{ marginBottom: '10px' }}>
+              <label style={{ fontSize: '0.82rem', marginBottom: '4px', display: 'block' }}>Singing Language</label>
+              <Dropdown
+                value={listenLanguage}
+                options={[
+                  { label: "Português (BR)", value: "pt-BR" },
+                  { label: "Deutsch (DE)", value: "de-DE" },
+                  { label: "English (US)", value: "en-US" }
+                ]}
+                onChange={(e) => setListenLanguage(e.value)}
+                className="w-full"
+                disabled={!isSupported}
+              />
+            </div>
+
+            <Button
+              type="button"
+              label={isAutoFollowEnabled ? "Stop Auto-Follow" : "Start Auto-Follow"}
+              icon={isAutoFollowEnabled ? "pi pi-pause" : "pi pi-play"}
+              className={`p-button-sm ${isAutoFollowEnabled ? "p-button-danger" : "p-button-success"}`}
+              onClick={handleToggleAutoFollow}
+              disabled={!selectedSong || (!isLocalEngine && !isSupported) || (isLocalEngine && !localWhisperFollower.isServerOnline)}
+              style={{ width: "100%" }}
+            />
+
+            {!isSupported && !isLocalEngine && (
+              <small className="autofollow-warning">
+                Web Speech API not supported in this browser. Please use Chrome or Edge.
+              </small>
+            )}
+
+            {activeError && (
+              <div className="autofollow-error">
+                <i className="pi pi-exclamation-triangle" /> {activeError}
+              </div>
+            )}
+
+            {!isLocalEngine && isAudioActive && isAutoFollowEnabled && !lastTranscript && (
+              <div className="chrome-mismatch-warning" style={{ marginTop: '8px' }}>
+                <i className="pi pi-exclamation-triangle" />
+                <div>
+                  <strong>Sound is detected, but Chrome speech is not receiving words:</strong>
+                  <p style={{ marginTop: '4px', marginBottom: '6px' }}>
+                    The VU meter confirms your microphone is sending audio. However, Chrome's speech recognizer uses your <strong>Windows Default Recording Device</strong>.
+                  </p>
+                  <div style={{ background: 'rgba(255,255,255,0.7)', padding: '6px 8px', borderRadius: '4px', fontSize: '0.73rem' }}>
+                    <strong>Quick Windows Fix (10 seconds):</strong>
+                    <ol style={{ margin: '4px 0 0 0', paddingLeft: '16px' }}>
+                      <li>Press <kbd>Win + R</kbd>, type <code>mmsys.cpl</code> and hit <strong>Enter</strong>.</li>
+                      <li>In the <strong>Recording</strong> tab, right-click <strong>{selectedDevice ? selectedDevice.label : 'your audio interface'}</strong>.</li>
+                      <li>Click <strong>"Set as Default Device"</strong> and <strong>"Set as Default Communication Device"</strong>.</li>
+                      <li>Also verify the <strong>Singing Language</strong> dropdown above matches what you're singing (PT, DE, or EN).</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isAutoFollowEnabled && (
+              <div className="autofollow-status">
+                <div className="transcript-box">
+                  <span className="transcript-label">Live Heard:</span>
+                  <span className="transcript-text">
+                    {lastTranscript || (isListening ? "Listening for singing..." : "Waiting...")}
+                  </span>
+                </div>
+                {highlightedWords.length > 0 && (
+                  <div className="highlighted-words-bar">
+                    <span className="highlight-label">Singing:</span>
+                    <div className="highlight-tags">
+                      {highlightedWords.map((word, idx) => (
+                        <span key={idx} className="highlight-tag-chip">{word}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {lastMatch && (
+                  <div className="match-badge">
+                    <i className="pi pi-check-circle" />
+                    <span>Matched <strong>{lastMatch.block.id.toUpperCase()}</strong> ({lastMatch.confidence}%)</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Test Voice / Text Simulation */}
+            <div style={{ marginTop: '10px' }}>
+              <label style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 600 }}>
+                Test Words &amp; Slide Follow:
+              </label>
+              <div className="test-voice-bar">
+                <input
+                  type="text"
+                  placeholder="Type sung words to test..."
+                  value={testTextInput}
+                  onChange={(e) => setTestTextInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && testTextInput.trim()) {
+                      processText(testTextInput);
+                    }
+                  }}
+                  className="test-voice-input"
+                />
+                <button
+                  type="button"
+                  className="test-voice-btn"
+                  onClick={() => {
+                    if (testTextInput.trim()) {
+                      processText(testTextInput);
+                    }
+                  }}
+                >
+                  Test
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -203,23 +708,36 @@ const Projection = () => {
           )}
           
           <div className="lyrics-blocks-list">
-            {lyricsBlocks.map((block) => (
-              <div 
-                key={block.id} 
-                className={`lyrics-block-item ${selectedBlockId === block.id ? 'active' : ''} ${!projectionActive ? 'disabled' : ''}`}
-                onClick={() => handleBlockClick(block)}
-              >
-                <div className="block-tag">{block.id.toUpperCase()}</div>
-                <div className="block-content">
-                  {block.pt.map((line, i) => (
-                    <div key={`pt-${i}`} className="preview-pt">{line}</div>
-                  ))}
-                  {block.de.map((line, i) => (
-                    <div key={`de-${i}`} className="preview-de">{line}</div>
-                  ))}
+            {lyricsBlocks.map((block) => {
+              const isCurrent = selectedBlockId === block.id;
+              const isMatchedByAI = lastMatch && lastMatch.block.id === block.id && isAutoFollowEnabled;
+              const activeHighlights = isCurrent ? highlightedWords : [];
+              return (
+                <div 
+                  key={block.id} 
+                  id={`block-${block.id}`}
+                  className={`lyrics-block-item ${isCurrent ? 'active' : ''} ${isMatchedByAI ? 'ai-tracking' : ''}`}
+                  onClick={() => handleBlockClick(block)}
+                >
+                  <div className="block-tag">
+                    {block.id.toUpperCase()}
+                    {isMatchedByAI && <span className="ai-tag-dot" title="Auto-Follow Matched" />}
+                  </div>
+                  <div className="block-content">
+                    {block.pt.map((line, i) => (
+                      <div key={`pt-${i}`} className="preview-pt">
+                        {renderHighlightedLine(line, activeHighlights)}
+                      </div>
+                    ))}
+                    {block.de.map((line, i) => (
+                      <div key={`de-${i}`} className="preview-de">
+                        {renderHighlightedLine(line, activeHighlights)}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

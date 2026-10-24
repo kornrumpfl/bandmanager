@@ -36,3 +36,18 @@ html, body {
 .de-line {
   color: yellow;
 }
+
+/* Word-Level Live Singing Highlight (Karaoke style) */
+.highlighted-word {
+  color: #38bdf8 !important; /* Glowing electric sky blue */
+  text-shadow: 0 0 16px rgba(56, 189, 248, 1), 0 0 30px rgba(56, 189, 248, 0.7);
+  display: inline-block;
+  transform: scale(1.04);
+  transition: all 0.12s ease-in-out;
+}
+
+.de-line .highlighted-word {
+  color: #ffffff !important; /* Bright white glow on yellow lines */
+  text-shadow: 0 0 16px rgba(255, 255, 255, 1), 0 0 30px rgba(250, 204, 21, 0.9);
+}
+
