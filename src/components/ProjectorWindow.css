@@ -25,7 +25,8 @@ html, body {
 
 .lyric-line {
   margin: 10px 0;
-  line-height: 1.2;
+  line-height: 1.25;
+  transition: opacity 0.25s ease, transform 0.2s ease, text-shadow 0.25s ease, color 0.2s ease;
 }
 
 .pt-line {
@@ -34,5 +35,26 @@ html, body {
 }
 
 .de-line {
-  color: yellow;
+  color: #facc15;
 }
+
+/* Active phrase styling when phrase highlighting is enabled */
+.lyric-line.phrase-active.pt-line {
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 35px rgba(56, 189, 248, 0.6);
+  transform: scale(1.02);
+}
+
+.lyric-line.phrase-active.de-line {
+  color: #fef08a;
+  text-shadow: 0 0 20px rgba(250, 204, 21, 0.9), 0 0 35px rgba(245, 158, 11, 0.6);
+  transform: scale(1.02);
+}
+
+/* Subtle dimming of inactive phrases within the active slide */
+.lyric-line.phrase-dimmed {
+  opacity: 0.38;
+}
+
+
+
