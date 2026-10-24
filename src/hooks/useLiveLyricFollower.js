@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { matchTranscriptToBlocks } from "../utils/lyricsMatcher";
+import { matchTranscriptToLyrics } from "../utils/lyricsMatcher";
 
 const SpeechRecognition =
   typeof window !== "undefined"
@@ -10,6 +10,7 @@ export const useLiveLyricFollower = ({
   blocks = [],
   currentBlockId = null,
   onBlockSelect,
+  onPhraseSelect,
   onWordsMatched,
   language = "pt-BR",
   minConfidence = 0.35,
@@ -21,6 +22,8 @@ export const useLiveLyricFollower = ({
   const [lastError, setLastError] = useState("");
   const [lastTranscript, setLastTranscript] = useState("");
   const [lastMatch, setLastMatch] = useState(null);
+  const [activePhraseIndex, setActivePhraseIndex] = useState(null);
+  const [activePhraseText, setActivePhraseText] = useState("");
   const [highlightedWords, setHighlightedWords] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -57,7 +60,7 @@ export const useLiveLyricFollower = ({
       setLastTranscript(trimmed);
 
       const targetLang = getTargetLang(language);
-      const match = matchTranscriptToBlocks(trimmed, blocksRef.current, {
+      const match = matchTranscriptToLyrics(trimmed, blocksRef.current, {
         currentBlockId: currentBlockIdRef.current,
         targetLanguage: targetLang,
         minConfidence,
@@ -65,26 +68,30 @@ export const useLiveLyricFollower = ({
 
       if (match) {
         setLastMatch(match);
-        const tokens = match.matchedTokens || [];
-        setHighlightedWords(tokens);
-        if (onWordsMatched) {
-          onWordsMatched(tokens, match.block);
+
+        if (match.phraseIndex !== undefined && match.phraseIndex !== null) {
+          setActivePhraseIndex(match.phraseIndex);
+          setActivePhraseText(match.matchedPhrase || "");
+          if (onPhraseSelect) {
+            onPhraseSelect(match.phraseIndex, match.matchedPhrase);
+          }
         }
 
-        const now = Date.now();
-        // Prevent rapid cycling: require at least 1000ms between slide changes
-        if (
-          match.block.id !== currentBlockIdRef.current &&
-          now - lastSwitchTimeRef.current > 1000
-        ) {
-          lastSwitchTimeRef.current = now;
-          if (onBlockSelect) {
-            onBlockSelect(match.block, tokens);
+        if (match.block) {
+          const now = Date.now();
+          if (
+            match.block.id !== currentBlockIdRef.current ||
+            now - lastSwitchTimeRef.current > 1500
+          ) {
+            lastSwitchTimeRef.current = now;
+            if (onBlockSelect) {
+              onBlockSelect(match.block, match.phraseIndex ?? 0);
+            }
           }
         }
       }
     },
-    [getTargetLang, language, minConfidence, onBlockSelect, onWordsMatched]
+    [getTargetLang, language, minConfidence, onBlockSelect, onPhraseSelect]
   );
 
   const handleResult = useCallback(
@@ -201,6 +208,8 @@ export const useLiveLyricFollower = ({
     }
     setLastTranscript("");
     setLastMatch(null);
+    setActivePhraseIndex(null);
+    setActivePhraseText("");
     setHighlightedWords([]);
   }, []);
 
@@ -240,6 +249,8 @@ export const useLiveLyricFollower = ({
     lastError,
     lastTranscript,
     lastMatch,
+    activePhraseIndex,
+    activePhraseText,
     highlightedWords,
     errorMessage,
     processText,

@@ -4,3 +4,7 @@ fastapi>=0.115.0
 uvicorn>=0.34.0
 python-multipart>=0.0.20
 ctranslate2>=4.0.0
+
+# Optional for NVIDIA GPU (CUDA 12) acceleration:
+# nvidia-cublas-cu12
+# nvidia-cudnn-cu12

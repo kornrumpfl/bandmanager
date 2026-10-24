@@ -32,9 +32,22 @@ app.add_middleware(
 # Prevent macOS OpenMP / Accelerate thread deadlocks
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# Auto-detect device (NVIDIA GPU if available on network machine, otherwise CPU)
-if os.environ.get("WHISPER_DEVICE"):
-    DEVICE = os.environ.get("WHISPER_DEVICE")
+# Parse CLI arguments for model and device:
+# e.g.: python server/whisper_server.py [tiny|base|small] [cuda|cpu]
+cli_model = None
+cli_device = None
+
+for arg in sys.argv[1:]:
+    lower = arg.lower()
+    if lower in ("cuda", "cpu", "auto"):
+        cli_device = lower
+    elif not arg.startswith("-") and not arg.isdigit():
+        cli_model = arg
+
+target_device = cli_device or os.environ.get("WHISPER_DEVICE")
+
+if target_device:
+    DEVICE = "cpu" if target_device == "cpu" else "cuda"
     COMPUTE_TYPE = os.environ.get("WHISPER_COMPUTE", "float16" if DEVICE == "cuda" else "int8")
 else:
     try:
@@ -43,13 +56,6 @@ else:
         has_cuda = False
     DEVICE = "cuda" if has_cuda else "cpu"
     COMPUTE_TYPE = "float16" if has_cuda else "int8"
-
-# Model selection: CLI argument takes first priority, then WHISPER_MODEL env, then 'tiny'
-cli_model = None
-for arg in sys.argv[1:]:
-    if not arg.startswith("-") and not arg.isdigit():
-        cli_model = arg
-        break
 
 MODEL_SIZE = cli_model or os.environ.get("WHISPER_MODEL", "tiny")
 CPU_THREADS = int(os.environ.get("CPU_THREADS", "4"))
@@ -71,8 +77,22 @@ except Exception as e:
     model_path = MODEL_SIZE
 
 print(f"[2/2] Loading '{MODEL_SIZE}' into memory...")
-model = WhisperModel(model_path, device=DEVICE, compute_type=COMPUTE_TYPE, cpu_threads=CPU_THREADS)
-print(f"===> Model '{MODEL_SIZE}' loaded and ready!\n")
+try:
+    if DEVICE == "cuda":
+        model = WhisperModel(model_path, device="cuda", compute_type=COMPUTE_TYPE)
+    else:
+        model = WhisperModel(model_path, device="cpu", compute_type=COMPUTE_TYPE, cpu_threads=CPU_THREADS)
+except Exception as err:
+    if DEVICE == "cuda":
+        print(f"      [!] CUDA GPU initialization failed: {err}")
+        print(f"      [!] Falling back automatically to CPU (int8)...")
+        DEVICE = "cpu"
+        COMPUTE_TYPE = "int8"
+        model = WhisperModel(model_path, device="cpu", compute_type="int8", cpu_threads=CPU_THREADS)
+    else:
+        raise err
+
+print(f"===> Model '{MODEL_SIZE}' loaded and ready on {DEVICE.upper()} ({COMPUTE_TYPE})!\n")
 
 @app.get("/health")
 def health():

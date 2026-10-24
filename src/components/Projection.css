@@ -157,10 +157,35 @@
 
 .preview-pt {
   color: #333; /* Dark text on white background */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .lyrics-block-item.active .preview-pt {
   color: white;
+}
+
+.preview-pt.phrase-active-preview {
+  font-weight: 700;
+}
+
+.lyrics-block-item.active .preview-pt.phrase-active-preview {
+  color: #fef08a;
+  text-shadow: 0 0 10px rgba(254, 240, 138, 0.6);
+}
+
+.phrase-singing-pill {
+  font-size: 0.6rem;
+  background-color: #22c55e;
+  color: white;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-left: 8px;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 
 .preview-de {
@@ -169,6 +194,11 @@
 
 .lyrics-block-item.active .preview-de {
   color: #b3d4ff;
+}
+
+.lyrics-block-item.active .preview-de.phrase-active-preview {
+  color: #ffffff;
+  font-weight: 600;
 }
 
 /* Auto-Follow Live Mic Styles */
@@ -278,6 +308,17 @@
   border-radius: 4px;
   font-size: 0.8rem;
   font-weight: 500;
+}
+
+.matched-phrase-text {
+  color: #15803d;
+  font-weight: 500;
+}
+
+.matched-phrase-text em {
+  font-style: italic;
+  color: #064e3b;
+  font-weight: 600;
 }
 
 .ai-tag-dot {
@@ -404,40 +445,6 @@
   margin-bottom: 2px;
 }
 
-/* Word-Level Highlight in Preview List */
-.preview-pt .highlighted-word {
-  background-color: #fef08a;
-  color: #854d0e;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 3px;
-  box-shadow: 0 0 6px rgba(234, 179, 8, 0.4);
-}
-
-.lyrics-block-item.active .preview-pt .highlighted-word {
-  background-color: #38bdf8;
-  color: #0c4a6e;
-  font-weight: 800;
-  padding: 1px 4px;
-  border-radius: 3px;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
-}
-
-.preview-de .highlighted-word {
-  background-color: #fed7aa;
-  color: #9a3412;
-  font-weight: bold;
-  padding: 1px 4px;
-  border-radius: 3px;
-}
-
-.lyrics-block-item.active .preview-de .highlighted-word {
-  background-color: #ffffff;
-  color: #1e3a8a;
-  font-weight: 800;
-  padding: 1px 4px;
-  border-radius: 3px;
-}
 
 /* Auto-Advance Feature Row */
 .autofollow-feature-row {
@@ -484,39 +491,6 @@
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
 }
 
-/* Highlighted Words Bar */
-.highlighted-words-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f0fdf4;
-  border: 1px dashed #86efac;
-  border-radius: 4px;
-  padding: 6px 8px;
-}
-
-.highlight-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #166534;
-  text-transform: uppercase;
-}
-
-.highlight-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.highlight-tag-chip {
-  background: #22c55e;
-  color: white;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
 
 /* Test Voice Simulation Bar */
 .test-voice-bar {

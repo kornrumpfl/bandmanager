@@ -1,8 +1,10 @@
-import React from "react";
-
 /**
- * Lyrics Matching Engine for Live Audio Follow
- * Normalizes speech recognition transcripts and matches them against song slide blocks.
+ * Direct Phrase Finder Engine:
+ * 
+ * Logic:
+ * - Direct phrase matching across the song without rigid top-to-bottom sequence limits.
+ * - Detects whichever phrase is sung (in PT or DE) and immediately selects that slide and highlights that line.
+ * - Prioritizes opening words match (first 2-3 words) and line overlap to resolve identical phrases.
  */
 
 export function normalizeText(str) {
@@ -20,9 +22,6 @@ export function getWordTokens(str) {
   return normalizeText(str).split(" ").filter((w) => w.length > 0);
 }
 
-/**
- * Fast Levenshtein distance for fuzzy word matching
- */
 export function levenshtein(a, b) {
   if (a === b) return 0;
   if (!a.length) return b.length;
@@ -46,153 +45,153 @@ export function levenshtein(a, b) {
   return row[b.length];
 }
 
-/**
- * Checks if two words are phonetic/spelling matches
- */
-export function wordsAreSimilar(w1, w2) {
+export function wordsMatch(w1, w2) {
+  if (!w1 || !w2) return false;
   if (w1 === w2) return true;
-  if (Math.abs(w1.length - w2.length) > 2) return false;
+  // Common contractions in PT/DE
+  if ((w1 === "pra" && w2 === "para") || (w1 === "para" && w2 === "pra")) return true;
+  if ((w1 === "pro" && w2 === "para") || (w1 === "para" && w2 === "pro")) return true;
+  if ((w1 === "num" && w2 === "em") || (w1 === "em" && w2 === "num")) return true;
   if (w1.length <= 3 || w2.length <= 3) return false;
-  const dist = levenshtein(w1, w2);
-  return dist <= (w1.length > 6 ? 2 : 1);
+  if (Math.abs(w1.length - w2.length) > 2) return false;
+  return levenshtein(w1, w2) <= (w1.length > 6 ? 2 : 1);
 }
 
 /**
- * Match a recognized transcript window against available song blocks.
- *
- * @param {string} transcript - Recent spoken/sung words from speech recognition
- * @param {Array} blocks - Array of song blocks from getLyricsBlocks()
- * @param {Object} options - Matching configuration
- * @returns {Object|null} Best matching block with score and confidence or null
+ * Checks how many opening words match (up to 3 words).
+ * Also tests starting at word 1 in case the first word was dropped.
  */
-export function matchTranscriptToBlocks(transcript, blocks, options = {}) {
-  const {
-    currentBlockId = null,
-    targetLanguage = "auto", // "pt", "de", "auto"
-    minConfidence = 0.45,
-  } = options;
+export function matchesPhraseStart(transcriptTokens, lineTokens) {
+  if (lineTokens.length === 0 || transcriptTokens.length === 0) return 0;
 
-  const rawTokens = getWordTokens(transcript);
-  if (rawTokens.length === 0 || !blocks || blocks.length === 0) {
-    return null;
+  const startCandidates = [0];
+  if (lineTokens.length >= 2) startCandidates.push(1);
+
+  let best = 0;
+  for (const s of startCandidates) {
+    const w0 = lineTokens[s];
+    const w1 = s + 1 < lineTokens.length ? lineTokens[s + 1] : null;
+    const w2 = s + 2 < lineTokens.length ? lineTokens[s + 2] : null;
+
+    for (let i = 0; i < transcriptTokens.length; i++) {
+      if (wordsMatch(transcriptTokens[i], w0)) {
+        if (w1 && i + 1 < transcriptTokens.length && wordsMatch(transcriptTokens[i + 1], w1)) {
+          if (w2 && i + 2 < transcriptTokens.length && wordsMatch(transcriptTokens[i + 2], w2)) {
+            return 3;
+          }
+          best = Math.max(best, 2);
+        } else if (lineTokens.length === 1 || transcriptTokens.length === 1) {
+          if (w0.length >= 4) best = Math.max(best, 1.5);
+        }
+      }
+    }
   }
+  return best;
+}
 
-  // Sliding recency window of last 4-8 words spoken
-  const windowSize = Math.min(rawTokens.length, 7);
-  const transcriptTokens = rawTokens.slice(-windowSize);
+/**
+ * DIRECT PHRASE FINDER:
+ * Searches ALL slides and finds the exact phrase being sung.
+ * Returns the slide (block) containing that phrase and the phrase index within it.
+ */
+export function findPhraseInLyrics(transcript, blocks, options = {}) {
+  const { currentBlockId = null } = options;
+  const transcriptTokens = getWordTokens(transcript);
+  if (transcriptTokens.length === 0 || !blocks || blocks.length === 0) return null;
 
   let bestMatch = null;
   let highestScore = 0;
 
-  const currentIndex = blocks.findIndex((b) => b.id === currentBlockId);
-  const nextIndex = currentIndex !== -1 && currentIndex + 1 < blocks.length ? currentIndex + 1 : -1;
+  for (let bIdx = 0; bIdx < blocks.length; bIdx++) {
+    const block = blocks[bIdx];
+    const ptLines = block.pt || [];
+    const deLines = block.de || [];
+    const lineCount = Math.max(ptLines.length, deLines.length);
 
-  for (let i = 0; i < blocks.length; i++) {
-    const block = blocks[i];
+    for (let lIdx = 0; lIdx < lineCount; lIdx++) {
+      const candidates = [];
+      if (ptLines[lIdx]) candidates.push(ptLines[lIdx]);
+      if (deLines[lIdx]) candidates.push(deLines[lIdx]);
 
-    let textLines = [];
-    if (targetLanguage === "pt") {
-      textLines = block.pt || [];
-    } else if (targetLanguage === "de") {
-      textLines = block.de || [];
-    } else {
-      textLines = [...(block.pt || []), ...(block.de || [])];
-    }
+      for (const lineText of candidates) {
+        const lineTokens = getWordTokens(lineText);
+        if (lineTokens.length === 0) continue;
 
-    const blockTokens = getWordTokens(textLines.join(" "));
-    if (blockTokens.length === 0) continue;
+        // 1. Opening words match (first 2 words)
+        const openingMatch = matchesPhraseStart(transcriptTokens, lineTokens);
 
-    let maxConsecutiveMatches = 0;
-    let totalMatchedWords = 0;
+        // 2. Full line word overlap
+        let overlap = 0;
+        for (const t of transcriptTokens) {
+          if (lineTokens.some((lt) => wordsMatch(t, lt))) overlap++;
+        }
 
-    const matchedTokens = [];
-    for (let tIdx = 0; tIdx < transcriptTokens.length; tIdx++) {
-      const tWord = transcriptTokens[tIdx];
-      let foundInBlock = false;
-      for (let bIdx = 0; bIdx < blockTokens.length; bIdx++) {
-        if (wordsAreSimilar(tWord, blockTokens[bIdx])) {
-          foundInBlock = true;
-          matchedTokens.push(tWord);
-          matchedTokens.push(blockTokens[bIdx]);
-          let streak = 1;
-          while (
-            tIdx + streak < transcriptTokens.length &&
-            bIdx + streak < blockTokens.length &&
-            wordsAreSimilar(transcriptTokens[tIdx + streak], blockTokens[bIdx + streak])
-          ) {
-            streak++;
-          }
-          if (streak > maxConsecutiveMatches) {
-            maxConsecutiveMatches = streak;
-          }
-          break;
+        // Composite score:
+        let score = (openingMatch * 1.5) + (overlap * 0.5);
+
+        // Gentle hysteresis bonus if already inside this block
+        if (block.id === currentBlockId) {
+          score += 0.25;
+        }
+
+        if (score > highestScore) {
+          highestScore = score;
+          bestMatch = {
+            block,
+            phraseIndex: lIdx,
+            phraseText: lineText,
+            score,
+            confidence: Math.round(Math.min(100, (score / 4.5) * 100)),
+            matchedPhrase: lineText,
+            matchedTokens: [],
+          };
         }
       }
-      if (foundInBlock) {
-        totalMatchedWords++;
-      }
-    }
-
-    const matchRatio = totalMatchedWords / transcriptTokens.length;
-    const sequenceRatio = transcriptTokens.length > 1 ? maxConsecutiveMatches / transcriptTokens.length : 1;
-
-    let score = matchRatio * 0.6 + sequenceRatio * 0.4;
-
-    // Contextual hysteresis and forward anticipation:
-    // Prefer staying on current block or moving to the next block unless another block clearly wins
-    if (block.id === currentBlockId) {
-      score += 0.10;
-    } else if (i === nextIndex) {
-      score += 0.15;
-    }
-
-    if (score > highestScore) {
-      highestScore = score;
-      bestMatch = {
-        block,
-        score: Math.min(1, score),
-        confidence: Math.round(Math.min(1, score) * 100),
-        matchedWords: totalMatchedWords,
-        matchedTokens: Array.from(new Set(matchedTokens)),
-        windowSize: transcriptTokens.length,
-      };
     }
   }
 
-  if (bestMatch && bestMatch.score >= minConfidence) {
+  if (bestMatch && (highestScore >= 1.8 || (transcriptTokens.length === 1 && highestScore >= 1.4))) {
     return bestMatch;
   }
+
   return null;
 }
 
 /**
- * Renders a lyric line with word-level highlighting for words currently being sung
+ * Unified matching runner for backward compatibility and hook integration
  */
-export function renderHighlightedLine(line, highlightedWords = []) {
-  if (!line) return "";
-  if (!highlightedWords || highlightedWords.length === 0) {
-    return line;
-  }
+export function matchTranscriptToLyrics(transcript, blocks, options = {}) {
+  const match = findPhraseInLyrics(transcript, blocks, options);
+  if (!match) return null;
 
-  // Tokenize preserving whitespace and punctuation
-  const tokens = line.split(/(\s+)/);
-  return tokens.map((token, idx) => {
-    if (/^\s+$/.test(token)) return token;
-    const cleanWord = normalizeText(token);
-    if (!cleanWord) return token;
-
-    const isMatched = highlightedWords.some((hw) =>
-      wordsAreSimilar(normalizeText(hw), cleanWord)
-    );
-
-    if (isMatched) {
-      return (
-        <span key={idx} className="highlighted-word">
-          {token}
-        </span>
-      );
-    }
-    return <span key={idx}>{token}</span>;
-  });
+  return {
+    slideMatch: match,
+    phraseMatch: match,
+    block: match.block,
+    confidence: match.confidence,
+    matchedPhrase: match.phraseText,
+    phraseIndex: match.phraseIndex,
+    matchedTokens: [],
+  };
 }
 
+export function matchSlideByFirstPhrase(transcript, blocks, options = {}) {
+  return findPhraseInLyrics(transcript, blocks, options);
+}
+
+export function detectActivePhraseInBlock(transcript, block) {
+  if (!block) return null;
+  return findPhraseInLyrics(transcript, [block]);
+}
+
+export function matchTranscriptToBlocks(transcript, blocks, options = {}) {
+  return findPhraseInLyrics(transcript, blocks, options);
+}
+
+/**
+ * Returns clean lyric line without word-level highlight spans.
+ */
+export function renderHighlightedLine(line) {
+  if (!line) return "";
+  return line;
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { matchTranscriptToBlocks } from "../utils/lyricsMatcher";
+import { matchTranscriptToLyrics } from "../utils/lyricsMatcher";
 
 export const useLocalWhisperFollower = ({
   stream = null,
@@ -7,6 +7,7 @@ export const useLocalWhisperFollower = ({
   currentBlockId = null,
   selectedSong = null,
   onBlockSelect,
+  onPhraseSelect,
   onWordsMatched,
   language = "pt", // "pt", "de", "en", "auto"
   serverUrl = "http://127.0.0.1:5001",
@@ -17,6 +18,8 @@ export const useLocalWhisperFollower = ({
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [lastTranscript, setLastTranscript] = useState("");
   const [lastMatch, setLastMatch] = useState(null);
+  const [activePhraseIndex, setActivePhraseIndex] = useState(null);
+  const [activePhraseText, setActivePhraseText] = useState("");
   const [highlightedWords, setHighlightedWords] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -97,7 +100,7 @@ export const useLocalWhisperFollower = ({
       setLastTranscript(trimmed);
 
       const targetLang = language.startsWith("de") ? "de" : language.startsWith("pt") ? "pt" : "auto";
-      const match = matchTranscriptToBlocks(trimmed, blocksRef.current, {
+      const match = matchTranscriptToLyrics(trimmed, blocksRef.current, {
         currentBlockId: currentBlockIdRef.current,
         targetLanguage: targetLang,
         minConfidence,
@@ -105,32 +108,36 @@ export const useLocalWhisperFollower = ({
 
       if (match) {
         setLastMatch(match);
-        const tokens = match.matchedTokens || [];
-        setHighlightedWords(tokens);
 
-        if (onWordsMatched) {
-          onWordsMatched(tokens, match.block);
+        if (match.phraseIndex !== undefined && match.phraseIndex !== null) {
+          setActivePhraseIndex(match.phraseIndex);
+          setActivePhraseText(match.matchedPhrase || "");
+          if (onPhraseSelect) {
+            onPhraseSelect(match.phraseIndex, match.matchedPhrase);
+          }
         }
 
-        const now = Date.now();
-        if (
-          match.block.id !== currentBlockIdRef.current &&
-          now - lastSwitchTimeRef.current > 1000
-        ) {
-          lastSwitchTimeRef.current = now;
-          if (onBlockSelect) {
-            onBlockSelect(match.block, tokens);
+        if (match.block) {
+          const now = Date.now();
+          if (
+            match.block.id !== currentBlockIdRef.current ||
+            now - lastSwitchTimeRef.current > 1500
+          ) {
+            lastSwitchTimeRef.current = now;
+            if (onBlockSelect) {
+              onBlockSelect(match.block, match.phraseIndex ?? 0);
+            }
           }
         }
       }
     },
-    [language, minConfidence, onBlockSelect, onWordsMatched]
+    [language, minConfidence, onBlockSelect, onPhraseSelect]
   );
 
   // Send an audio blob to local Whisper server
   const sendAudioChunk = useCallback(
     async (blob) => {
-      if (isProcessingRef.current || !blob || blob.size < 2000) return;
+      if (isProcessingRef.current || !blob || blob.size < 200) return;
       isProcessingRef.current = true;
       setIsTranscribing(true);
 
@@ -271,6 +278,8 @@ export const useLocalWhisperFollower = ({
     }
     setLastTranscript("");
     setLastMatch(null);
+    setActivePhraseIndex(null);
+    setActivePhraseText("");
     setHighlightedWords([]);
   }, []);
 
@@ -295,6 +304,8 @@ export const useLocalWhisperFollower = ({
     isTranscribing,
     lastTranscript,
     lastMatch,
+    activePhraseIndex,
+    activePhraseText,
     highlightedWords,
     errorMessage,
     checkServerHealth,

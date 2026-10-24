@@ -7,7 +7,6 @@ import { getLyricsBlocks } from "../utils/projectionUtils";
 import { useLiveLyricFollower } from "../hooks/useLiveLyricFollower";
 import { useLocalWhisperFollower } from "../hooks/useLocalWhisperFollower";
 import { useAudioInput } from "../hooks/useAudioInput";
-import { renderHighlightedLine } from "../utils/lyricsMatcher";
 import "./Projection.css";
 
 const Projection = () => {
@@ -22,6 +21,12 @@ const Projection = () => {
   const [listenLanguage, setListenLanguage] = useState("pt-BR");
   const [showDeviceTip, setShowDeviceTip] = useState(false);
   const [autoChangeSlide, setAutoChangeSlide] = useState(true);
+  const [highlightPhrase, setHighlightPhrase] = useState(() => {
+    const saved = localStorage.getItem("band_highlight_phrase");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [activePhraseIndex, setActivePhraseIndex] = useState(null);
+  const [activePhraseText, setActivePhraseText] = useState("");
   const [testTextInput, setTestTextInput] = useState("");
   const [engineType, setEngineType] = useState(() => {
     return localStorage.getItem("band_lyric_engine") || "local-whisper";
@@ -94,29 +99,49 @@ const Projection = () => {
 
   const lyricsBlocks = selectedSong ? getLyricsBlocks(selectedSong, groupLines) : [];
 
-  const handleAutoFollowSelect = useCallback((block, tokens) => {
-    if (autoChangeSlide) {
+  const handlePhraseSelect = useCallback((phraseIdx, phraseText) => {
+    setActivePhraseIndex(phraseIdx);
+    setActivePhraseText(phraseText || "");
+    if (bcRef.current && highlightPhrase) {
+      bcRef.current.postMessage({
+        type: 'UPDATE_PHRASE',
+        payload: { activePhraseIndex: phraseIdx, highlightPhrase: true }
+      });
+    }
+  }, [highlightPhrase]);
+
+  const handleAutoFollowSelect = useCallback((block, initialPhraseIndex = 0) => {
+    if (autoChangeSlide || !selectedBlockId) {
       setSelectedBlockId(block.id);
+      setActivePhraseIndex(initialPhraseIndex);
       if (bcRef.current) {
         bcRef.current.postMessage({ 
           type: 'UPDATE_LYRICS', 
-          payload: { block, fontSize: `${fontSize}vh`, highlightedWords: tokens || [] } 
+          payload: { 
+            block, 
+            fontSize: `${fontSize}vh`,
+            activePhraseIndex: highlightPhrase ? initialPhraseIndex : null,
+            highlightPhrase
+          } 
         });
       }
       const el = document.getElementById(`block-${block.id}`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
+    } else if (selectedBlockId === block.id) {
+      setActivePhraseIndex(initialPhraseIndex);
+      if (bcRef.current && highlightPhrase) {
+        bcRef.current.postMessage({
+          type: 'UPDATE_PHRASE',
+          payload: { activePhraseIndex: initialPhraseIndex, highlightPhrase: true }
+        });
+      }
     }
-  }, [autoChangeSlide, fontSize]);
+  }, [autoChangeSlide, fontSize, highlightPhrase, selectedBlockId]);
 
-  const handleWordsMatched = useCallback((tokens) => {
-    if (bcRef.current) {
-      bcRef.current.postMessage({
-        type: 'UPDATE_HIGHLIGHT',
-        payload: { highlightedWords: tokens }
-      });
-    }
+  const handleWordsMatched = useCallback(() => {
+    // Word-level selection disabled
   }, []);
 
   // Web Speech API Follower (Chrome built-in)
@@ -124,6 +149,7 @@ const Projection = () => {
     blocks: lyricsBlocks,
     currentBlockId: selectedBlockId,
     onBlockSelect: handleAutoFollowSelect,
+    onPhraseSelect: handlePhraseSelect,
     onWordsMatched: handleWordsMatched,
     language: listenLanguage,
     minConfidence: 0.35,
@@ -136,6 +162,7 @@ const Projection = () => {
     currentBlockId: selectedBlockId,
     selectedSong,
     onBlockSelect: handleAutoFollowSelect,
+    onPhraseSelect: handlePhraseSelect,
     onWordsMatched: handleWordsMatched,
     language: listenLanguage.startsWith("de") ? "de" : listenLanguage.startsWith("pt") ? "pt" : "en",
     serverUrl: whisperServerUrl,
@@ -147,7 +174,6 @@ const Projection = () => {
   const isListening = isLocalEngine ? localWhisperFollower.isListening : webSpeechFollower.isListening;
   const lastTranscript = isLocalEngine ? localWhisperFollower.lastTranscript : webSpeechFollower.lastTranscript;
   const lastMatch = isLocalEngine ? localWhisperFollower.lastMatch : webSpeechFollower.lastMatch;
-  const highlightedWords = isLocalEngine ? localWhisperFollower.highlightedWords : webSpeechFollower.highlightedWords;
   const processText = isLocalEngine ? localWhisperFollower.processText : webSpeechFollower.processText;
   const isSupported = isLocalEngine ? true : webSpeechFollower.isSupported;
   const activeError = isLocalEngine
@@ -214,12 +240,36 @@ const Projection = () => {
 
   const handleBlockClick = (block) => {
     setSelectedBlockId(block.id);
+    setActivePhraseIndex(0);
     if (bcRef.current) {
       bcRef.current.postMessage({ 
         type: 'UPDATE_LYRICS', 
-        payload: { block, fontSize: `${fontSize}vh`, highlightedWords } 
+        payload: { 
+          block, 
+          fontSize: `${fontSize}vh`,
+          activePhraseIndex: highlightPhrase ? 0 : null,
+          highlightPhrase
+        } 
       });
     }
+  };
+
+  const handleToggleHighlightPhrase = () => {
+    setHighlightPhrase((prev) => {
+      const nextVal = !prev;
+      localStorage.setItem("band_highlight_phrase", JSON.stringify(nextVal));
+      if (bcRef.current) {
+        bcRef.current.postMessage({
+          type: 'UPDATE_CONFIG',
+          payload: {
+            fontSize: `${fontSize}vh`,
+            highlightPhrase: nextVal,
+            activePhraseIndex: nextVal ? activePhraseIndex : null
+          }
+        });
+      }
+      return nextVal;
+    });
   };
 
   useEffect(() => {
@@ -521,11 +571,11 @@ const Projection = () => {
               </div>
             )}
 
-            {/* Auto-Advance Projected Box Feature */}
-            <div className="autofollow-feature-row" style={{ marginBottom: '10px' }}>
+            {/* System 1: Auto-Advance Slide Feature */}
+            <div className="autofollow-feature-row" style={{ marginBottom: '8px' }}>
               <div className="feature-info">
-                <span className="feature-title">Auto-Advance Lyrics Box</span>
-                <span className="feature-desc">Automatically switch slide when next verse/chorus is sung</span>
+                <span className="feature-title">Auto-Advance Slide (1st Phrase)</span>
+                <span className="feature-desc">Automatically switch slide when the 1st phrase of a slide is sung</span>
               </div>
               <button
                 type="button"
@@ -534,6 +584,22 @@ const Projection = () => {
                 title="Toggle automatic slide advancing"
               >
                 {autoChangeSlide ? "ON" : "OFF"}
+              </button>
+            </div>
+
+            {/* System 2: Highlight Current Phrase Feature */}
+            <div className="autofollow-feature-row" style={{ marginBottom: '10px' }}>
+              <div className="feature-info">
+                <span className="feature-title">Highlight Current Phrase</span>
+                <span className="feature-desc">Glows the specific phrase/line being sung on the screen</span>
+              </div>
+              <button
+                type="button"
+                className={`toggle-switch-btn ${highlightPhrase ? 'active' : ''}`}
+                onClick={handleToggleHighlightPhrase}
+                title="Toggle phrase-by-phrase live highlighting"
+              >
+                {highlightPhrase ? "ON" : "OFF"}
               </button>
             </div>
 
@@ -596,7 +662,7 @@ const Projection = () => {
               </div>
             )}
 
-            {isAutoFollowEnabled && (
+            {(isAutoFollowEnabled || lastTranscript || lastMatch || activePhraseText) && (
               <div className="autofollow-status">
                 <div className="transcript-box">
                   <span className="transcript-label">Live Heard:</span>
@@ -604,20 +670,21 @@ const Projection = () => {
                     {lastTranscript || (isListening ? "Listening for singing..." : "Waiting...")}
                   </span>
                 </div>
-                {highlightedWords.length > 0 && (
-                  <div className="highlighted-words-bar">
-                    <span className="highlight-label">Singing:</span>
-                    <div className="highlight-tags">
-                      {highlightedWords.map((word, idx) => (
-                        <span key={idx} className="highlight-tag-chip">{word}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {lastMatch && (
+                {(lastMatch || activePhraseText) && (
                   <div className="match-badge">
                     <i className="pi pi-check-circle" />
-                    <span>Matched <strong>{lastMatch.block.id.toUpperCase()}</strong> ({lastMatch.confidence}%)</span>
+                    <span>
+                      {selectedBlockId && <>Slide: <strong>{selectedBlockId.toUpperCase()}</strong></>}
+                      {activePhraseText && (
+                        <span className="matched-phrase-text"> &bull; Phrase: <em>&ldquo;{activePhraseText}&rdquo;</em></span>
+                      )}
+                      {!activePhraseText && lastMatch?.matchedPhrase && (
+                        <span className="matched-phrase-text"> &bull; Phrase: <em>&ldquo;{lastMatch.matchedPhrase}&rdquo;</em></span>
+                      )}
+                      {lastMatch && (
+                        <small style={{ opacity: 0.85, marginLeft: '6px' }}>({lastMatch.confidence}%)</small>
+                      )}
+                    </span>
                   </div>
                 )}
               </div>
@@ -710,8 +777,7 @@ const Projection = () => {
           <div className="lyrics-blocks-list">
             {lyricsBlocks.map((block) => {
               const isCurrent = selectedBlockId === block.id;
-              const isMatchedByAI = lastMatch && lastMatch.block.id === block.id && isAutoFollowEnabled;
-              const activeHighlights = isCurrent ? highlightedWords : [];
+              const isMatchedByAI = lastMatch && lastMatch.block.id === block.id;
               return (
                 <div 
                   key={block.id} 
@@ -724,16 +790,23 @@ const Projection = () => {
                     {isMatchedByAI && <span className="ai-tag-dot" title="Auto-Follow Matched" />}
                   </div>
                   <div className="block-content">
-                    {block.pt.map((line, i) => (
-                      <div key={`pt-${i}`} className="preview-pt">
-                        {renderHighlightedLine(line, activeHighlights)}
-                      </div>
-                    ))}
-                    {block.de.map((line, i) => (
-                      <div key={`de-${i}`} className="preview-de">
-                        {renderHighlightedLine(line, activeHighlights)}
-                      </div>
-                    ))}
+                    {block.pt.map((line, i) => {
+                      const isLineActive = isCurrent && highlightPhrase && activePhraseIndex === i;
+                      return (
+                        <div key={`pt-${i}`} className={`preview-pt ${isLineActive ? 'phrase-active-preview' : ''}`}>
+                          <span>{line}</span>
+                          {isLineActive && <span className="phrase-singing-pill">SINGING</span>}
+                        </div>
+                      );
+                    })}
+                    {block.de.map((line, i) => {
+                      const isLineActive = isCurrent && highlightPhrase && activePhraseIndex === i;
+                      return (
+                        <div key={`de-${i}`} className={`preview-de ${isLineActive ? 'phrase-active-preview' : ''}`}>
+                          <span>{line}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
