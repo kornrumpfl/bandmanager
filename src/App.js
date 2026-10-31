@@ -9,6 +9,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import PrivateRoute from "./components/PrivateRoute";
 import Projection from "./components/Projection";
+import BibleProjection from "./components/BibleProjection";
 import ProjectorWindow from "./components/ProjectorWindow";
 import "./App.css";
 
@@ -25,6 +26,7 @@ const AppLayout = () => {
           <Route path="/event/:id" element={<EventEditor />} />
           <Route path="/history" element={<EventHistory />} />
           <Route path="/projection" element={<Projection />} />
+          <Route path="/bible" element={<BibleProjection />} />
         </Routes>
       </div>
       <footer className="app-footer">

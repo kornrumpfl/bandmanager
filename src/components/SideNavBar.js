@@ -40,6 +40,7 @@ const SideNavBar = () => {
           <Button label={t('song.add_title')} icon="pi pi-plus" onClick={() => navigate("/add")} className="nav-btn" />
           <Button label={t('nav.history')} icon="pi pi-calendar" onClick={() => navigate("/history")} className="nav-btn" />
           <Button label="Projection" icon="pi pi-desktop" onClick={() => navigate("/projection")} className="nav-btn" />
+          <Button label="Bible" icon="pi pi-book" onClick={() => navigate("/bible")} className="nav-btn" />
         </div>
         <div className="nav-right">
           <Button label={t('nav.logout')} icon="pi pi-sign-out" onClick={handleLogout} className="p-button-danger nav-btn logout-btn" />

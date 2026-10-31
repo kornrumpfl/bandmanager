@@ -62,17 +62,28 @@ const ProjectorWindow = () => {
     };
   }, []);
 
+  const hasThreeTranslations = Boolean(
+    currentBlock &&
+      currentBlock.pt?.length &&
+      currentBlock.de?.length &&
+      currentBlock.third?.length
+  );
+
   return (
     <div className="projector-container">
       {currentBlock && (
-        <div className="lyrics-block" style={{ fontSize: fontSize }}>
+        <div
+          className={`lyrics-block ${hasThreeTranslations ? 'three-translations' : ''}`}
+          style={{ fontSize: fontSize }}
+        >
           {currentBlock.pt && currentBlock.pt.map((line, i) => {
             const isHighlighted = highlightPhrase && activePhraseIndex === i;
             const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
+            const isRef = currentBlock.isBible && line.startsWith('— ');
             return (
               <div 
                 key={`pt-${i}`} 
-                className={`lyric-line pt-line ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
+                className={`lyric-line pt-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
               >
                 {line}
               </div>
@@ -81,10 +92,24 @@ const ProjectorWindow = () => {
           {currentBlock.de && currentBlock.de.map((line, i) => {
             const isHighlighted = highlightPhrase && activePhraseIndex === i;
             const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
+            const isRef = currentBlock.isBible && line.startsWith('— ');
             return (
               <div 
                 key={`de-${i}`} 
-                className={`lyric-line de-line ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
+                className={`lyric-line de-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
+              >
+                {line}
+              </div>
+            );
+          })}
+          {currentBlock.third && currentBlock.third.map((line, i) => {
+            const isHighlighted = highlightPhrase && activePhraseIndex === i;
+            const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
+            const isRef = currentBlock.isBible && line.startsWith('— ');
+            return (
+              <div 
+                key={`third-${i}`} 
+                className={`lyric-line third-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
               >
                 {line}
               </div>
