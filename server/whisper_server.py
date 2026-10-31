@@ -29,19 +29,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_private_network_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Private-Network"] = "true"
+    return response
+
 # Prevent macOS OpenMP / Accelerate thread deadlocks
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# Parse CLI arguments for model and device:
-# e.g.: python server/whisper_server.py [tiny|base|small] [cuda|cpu]
+# Parse CLI arguments for model, device, and port:
+# e.g.: python server/whisper_server.py [tiny|base|small] [cuda|cpu] [8000]
 cli_model = None
 cli_device = None
+cli_port = None
 
-for arg in sys.argv[1:]:
+for i, arg in enumerate(sys.argv[1:], start=1):
     lower = arg.lower()
     if lower in ("cuda", "cpu", "auto"):
         cli_device = lower
-    elif not arg.startswith("-") and not arg.isdigit():
+    elif arg.isdigit():
+        cli_port = int(arg)
+    elif arg in ("--port", "-p") and i < len(sys.argv) - 1:
+        try:
+            cli_port = int(sys.argv[i + 1])
+        except ValueError:
+            pass
+    elif not arg.startswith("-"):
         cli_model = arg
 
 target_device = cli_device or os.environ.get("WHISPER_DEVICE")
@@ -158,7 +172,7 @@ async def transcribe(
 
 if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
-    port = int(os.environ.get("PORT", 5001))
+    port = cli_port or int(os.environ.get("PORT", 5001))
     print(f"\n==========================================")
     print(f"  BandManager Whisper AI Server")
     print(f"  Listening on all interfaces: http://0.0.0.0:{port}")
