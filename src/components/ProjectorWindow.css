@@ -20,13 +20,36 @@ html, body {
   text-align: center;
   font-size: 5vh;
   font-family: sans-serif;
-  padding: 20px;
+  padding: 20px 4vw;
+  max-width: 94vw;
+  max-height: 96vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.lyrics-block.three-translations .lyric-line {
+  margin: 5px 0;
+  line-height: 1.18;
 }
 
 .lyric-line {
   margin: 10px 0;
   line-height: 1.25;
   transition: opacity 0.25s ease, transform 0.2s ease, text-shadow 0.25s ease, color 0.2s ease;
+}
+
+.lyric-line.bible-ref-line {
+  font-size: 0.62em;
+  opacity: 0.85;
+  margin-top: -2px;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.lyrics-block.three-translations .lyric-line.bible-ref-line {
+  margin-bottom: 8px;
 }
 
 .pt-line {
@@ -36,6 +59,10 @@ html, body {
 
 .de-line {
   color: #facc15;
+}
+
+.third-line {
+  color: #38bdf8;
 }
 
 /* Active phrase styling when phrase highlighting is enabled */
@@ -51,10 +78,13 @@ html, body {
   transform: scale(1.02);
 }
 
+.lyric-line.phrase-active.third-line {
+  color: #bae6fd;
+  text-shadow: 0 0 20px rgba(56, 189, 248, 0.9), 0 0 35px rgba(14, 165, 233, 0.6);
+  transform: scale(1.02);
+}
+
 /* Subtle dimming of inactive phrases within the active slide */
 .lyric-line.phrase-dimmed {
   opacity: 0.38;
 }
-
-
-
