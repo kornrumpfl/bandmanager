@@ -397,18 +397,19 @@
 .holyrics-bottom-controls {
   display: flex;
   align-items: stretch;
-  gap: 4px;
-  padding: 4px;
-  height: 64px;
+  gap: 6px;
+  padding: 6px;
+  min-height: 96px;
   background-color: #141414;
+  border-top: 1px solid #282828;
   flex-shrink: 0;
 }
 
 .holyrics-mini-toolbar {
   display: grid;
-  grid-template-columns: repeat(2, 22px);
-  grid-auto-rows: 22px;
-  gap: 2px;
+  grid-template-columns: repeat(2, 24px);
+  grid-auto-rows: 24px;
+  gap: 3px;
   align-content: center;
 }
 
@@ -436,12 +437,28 @@
   color: #ffffff;
 }
 
+.mini-ctrl-btn.blackout {
+  background: #b45309 !important;
+  border-color: #f59e0b !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+}
+
+.holyrics-preview-and-font-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .holyrics-mini-preview {
   flex: 1;
+  min-height: 56px;
   background: radial-gradient(circle at center, #2b1d12 0%, #090909 100%);
   border: 1px solid #333333;
-  border-radius: 2px;
-  padding: 3px 5px;
+  border-radius: 3px;
+  padding: 3px 6px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -495,46 +512,58 @@
 
 .holyrics-font-controls {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 58px;
+  align-items: center;
+  gap: 8px;
+  background-color: #1a1a1a;
+  padding: 3px 6px;
+  border: 1px solid #2e2e2e;
+  border-radius: 3px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bible-font-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bible-font-slider {
+  flex: 1;
+  height: 4px;
+  accent-color: #facc15;
+  cursor: pointer;
+}
+
+.bible-font-size-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #facc15;
+  min-width: 38px;
+  text-align: right;
 }
 
 .font-step-btns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
+  display: flex;
+  gap: 3px;
 }
 
 .font-step-btn {
   background: #262626;
   border: 1px solid #3a3a3a;
   color: #cccccc;
-  font-size: 0.62rem;
-  padding: 2px 0;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 2px 7px;
   cursor: pointer;
   border-radius: 2px;
 }
 
-.font-step-btn.active {
-  background: #2c5d87;
+.font-step-btn:hover {
+  background: #333333;
   color: #ffffff;
-  border-color: #4b83b4;
-}
-
-.settings-btn {
-  background: #262626;
-  border: 1px solid #3a3a3a;
-  color: #cccccc;
-  font-size: 0.58rem;
-  padding: 2px 3px;
-  cursor: pointer;
-  border-radius: 2px;
-  white-space: nowrap;
-}
-
-.settings-btn:hover {
-  background: #353535;
 }
 
 /* Right Panel (~80% width, split 50/50 top Books Grid and bottom Numbers Grids) */

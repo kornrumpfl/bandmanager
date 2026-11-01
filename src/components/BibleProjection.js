@@ -1147,8 +1147,8 @@ const BibleProjection = () => {
                 <i className="pi pi-book" />
               </button>
             </div>
-
-            <div className="holyrics-mini-preview" title="Live Projection Preview (Up to 3 Translations)">
+            <div className="holyrics-preview-and-font-wrap">
+              <div className="holyrics-mini-preview" title="Live Projection Preview (Up to 3 Translations)">
               {slot1Enabled && currentSlot1Text && (
                 <div className="mini-preview-pt">
                   {selectedVerseIdx + 1}. {currentSlot1Text}
@@ -1202,6 +1202,7 @@ const BibleProjection = () => {
                   +
                 </button>
               </div>
+            </div>
             </div>
           </div>
         </div>
