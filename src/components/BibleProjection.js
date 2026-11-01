@@ -145,7 +145,11 @@ const BibleProjection = () => {
   const [selectedVerseIdx, setSelectedVerseIdx] = useState(0);
 
   const [projectionActive, setProjectionActive] = useState(false);
-  const [fontSize, setFontSize] = useState(4.5);
+  const [fontSize, setFontSize] = useState(() => {
+    const saved = localStorage.getItem("band_bible_font_size");
+    return saved !== null ? Number(saved) : 4.5;
+  });
+  const [isBlackout, setIsBlackout] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchInput, setShowSearchInput] = useState(false);
 
@@ -412,9 +416,38 @@ const BibleProjection = () => {
     addToHistory(selectedBookIdx, chapterIdx, 0);
   };
 
+
+  const handleFontSizeChange = useCallback((newVal) => {
+    const val = Number(Number(newVal).toFixed(1));
+    setFontSize(val);
+    localStorage.setItem("band_bible_font_size", val.toString());
+  }, []);
+
+  const handleToggleBlackout = useCallback(() => {
+    setIsBlackout((prev) => {
+      const next = !prev;
+      if (bcRef.current) {
+        bcRef.current.postMessage({
+          type: "SET_BLACKOUT",
+          payload: { blackout: next },
+        });
+      }
+      return next;
+    });
+  }, []);
+
   const handleSelectVerse = useCallback(
     (verseIdx, shouldScrollList = false) => {
       setSelectedVerseIdx(verseIdx);
+      if (isBlackout) {
+        setIsBlackout(false);
+        if (bcRef.current) {
+          bcRef.current.postMessage({
+            type: "SET_BLACKOUT",
+            payload: { blackout: false },
+          });
+        }
+      }
       broadcastVerse(selectedBookIdx, selectedChapterIdx, verseIdx);
       addToHistory(selectedBookIdx, selectedChapterIdx, verseIdx);
       if (shouldScrollList) {
@@ -424,7 +457,7 @@ const BibleProjection = () => {
         }
       }
     },
-    [selectedBookIdx, selectedChapterIdx, broadcastVerse, addToHistory]
+    [selectedBookIdx, selectedChapterIdx, broadcastVerse, addToHistory, isBlackout]
   );
 
   // Re-broadcast whenever versions, checkboxes, or font size change
@@ -459,7 +492,9 @@ const BibleProjection = () => {
       ) {
         return;
       }
-      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+      if (e.key === "b" || e.key === "B") {
+        handleToggleBlackout();
+      } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
         e.preventDefault();
         if (selectedVerseIdx + 1 < versesCount) {
           handleSelectVerse(selectedVerseIdx + 1, true);
@@ -473,7 +508,7 @@ const BibleProjection = () => {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedVerseIdx, versesCount, handleSelectVerse, showBibleManager]);
+  }, [selectedVerseIdx, versesCount, handleSelectVerse, showBibleManager, handleToggleBlackout]);
 
   const handleStartProjection = async () => {
     setProjectionActive(true);
@@ -1083,9 +1118,17 @@ const BibleProjection = () => {
                 type="button"
                 className="mini-ctrl-btn"
                 onClick={handleClearScreen}
-                title="Clear Projector Text (Black Screen)"
+                title="Clear Projector Text"
               >
                 <i className="pi pi-stop" />
+              </button>
+              <button
+                type="button"
+                className={`mini-ctrl-btn ${isBlackout ? "active blackout" : ""}`}
+                onClick={handleToggleBlackout}
+                title="Black Screen without stopping projection (Shortcut: B)"
+              >
+                <i className={isBlackout ? "pi pi-eye" : "pi pi-eye-slash"} />
               </button>
               <button
                 type="button"
@@ -1127,29 +1170,38 @@ const BibleProjection = () => {
             </div>
 
             <div className="holyrics-font-controls">
-              <div className="font-step-btns">
-                {[3.5, 4.5, 5.5].map((size, idx) => (
-                  <button
-                    key={size}
-                    type="button"
-                    className={`font-step-btn ${fontSize === size ? "active" : ""}`}
-                    onClick={() => setFontSize(size)}
-                    title={`Font Size ${idx + 1}`}
-                  >
-                    {idx + 1}
-                  </button>
-                ))}
+              <div className="bible-font-slider-wrap">
+                <i className="pi pi-text-height" style={{ fontSize: "0.75rem", color: "#9ca3af" }} />
+                <input
+                  type="range"
+                  min="2.5"
+                  max="8.0"
+                  step="0.2"
+                  value={fontSize}
+                  onChange={(e) => handleFontSizeChange(e.target.value)}
+                  className="bible-font-slider"
+                  title={`Slide to adjust font size: ${fontSize}vh`}
+                />
+                <span className="bible-font-size-label">{fontSize}vh</span>
               </div>
-              <button
-                type="button"
-                className="settings-btn"
-                onClick={() =>
-                  setFontSize((prev) => (prev >= 6.5 ? 3.5 : Number((prev + 0.5).toFixed(1))))
-                }
-                title={`Current Font Size: ${fontSize}vh (click to cycle)`}
-              >
-                Size: {fontSize}vh
-              </button>
+              <div className="font-step-btns">
+                <button
+                  type="button"
+                  className="font-step-btn"
+                  onClick={() => handleFontSizeChange(Math.max(2.5, fontSize - 0.5))}
+                  title="Smaller (-0.5)"
+                >
+                  -
+                </button>
+                <button
+                  type="button"
+                  className="font-step-btn"
+                  onClick={() => handleFontSizeChange(Math.min(8.0, fontSize + 0.5))}
+                  title="Larger (+0.5)"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
         </div>
