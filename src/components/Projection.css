@@ -5,6 +5,8 @@
   min-height: calc(100vh - 80px);
   box-sizing: border-box;
   width: 100%;
+  background-color: #0a0e17;
+  color: #e2e8f0;
 }
 
 .projection-main-area {
@@ -32,7 +34,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background-color: var(--surface-card);
+  background-color: #111827;
+  border: 1px solid #1f293d;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   padding: 20px;
   border-radius: var(--border-radius);
   box-sizing: border-box;
@@ -128,60 +132,80 @@
 .lyrics-block-item {
   display: flex;
   margin-bottom: 10px;
-  background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
   cursor: pointer;
+  overflow: hidden;
+  transition: all 0.15s ease;
 }
 
 .lyrics-block-item.disabled {
-  opacity: 0.6;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .lyrics-block-item:not(.disabled):hover {
-  background-color: #e3f2fd;
+  background-color: #283548;
+  border-color: #475569;
 }
 
+/* ACTIVE / CLICKED VERSE - HIGH-CONTRAST DEEP NAVY + VIBRANT YELLOW TEXT */
 .lyrics-block-item.active {
-  background-color: #1976d2;
-  color: white;
-  border-color: #1976d2;
+  background-color: #0f2b48 !important;
+  border: 2px solid #facc15 !important;
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.45) !important;
+}
+
+.lyrics-block-item.active:hover {
+  background-color: #0f2b48 !important;
 }
 
 .block-tag {
-  padding: 10px;
-  background-color: #f0f0f0;
-  border-right: 1px solid #ccc;
-  font-weight: bold;
-  color: #333;
-  width: 40px;
+  padding: 12px 10px;
+  background-color: #0f172a;
+  border-right: 1px solid #334155;
+  font-weight: 800;
+  color: #94a3b8;
+  width: 44px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 
 .lyrics-block-item.active .block-tag {
-  background-color: #1565c0;
-  color: white;
-  border-color: #115293;
+  background-color: #facc15 !important;
+  color: #000000 !important;
+  border-right: 2px solid #eab308 !important;
+  font-weight: 900 !important;
+  font-size: 0.95rem;
 }
 
 .block-content {
-  padding: 10px;
+  padding: 10px 14px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
+/* Inactive Portuguese line */
 .preview-pt {
-  color: #333; /* Dark text on white background */
+  color: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  font-size: 0.92rem;
+  line-height: 1.35;
 }
 
+/* ACTIVE Portuguese line - BRIGHT YELLOW */
 .lyrics-block-item.active .preview-pt {
-  color: white;
+  color: #fef08a !important;
+  font-weight: 700 !important;
 }
 
 .preview-pt.phrase-active-preview {
@@ -189,8 +213,8 @@
 }
 
 .lyrics-block-item.active .preview-pt.phrase-active-preview {
-  color: #fef08a;
-  text-shadow: 0 0 10px rgba(254, 240, 138, 0.6);
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.9) !important;
 }
 
 .phrase-singing-pill {
@@ -206,17 +230,23 @@
   box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 
+/* Inactive German line */
 .preview-de {
-  color: #666; /* greyish in preview */
+  color: #94a3b8;
+  font-size: 0.88rem;
+  line-height: 1.35;
 }
 
+/* ACTIVE German line - BRIGHT YELLOW (Fixes invisibility in German songs like Frei!) */
 .lyrics-block-item.active .preview-de {
-  color: #b3d4ff;
+  color: #facc15 !important;
+  font-weight: 700 !important;
 }
 
 .lyrics-block-item.active .preview-de.phrase-active-preview {
-  color: #ffffff;
-  font-weight: 600;
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.9) !important;
+  font-weight: 700 !important;
 }
 
 /* Auto-Follow Live Mic Styles */
@@ -1064,4 +1094,61 @@
 
 .remove-song-from-event-btn:hover {
   background: rgba(239, 68, 68, 0.15);
+}
+
+
+/* ==================== PRIMEREACT DARK CONTROLS IN PROJECTION ==================== */
+.projection-container h2 {
+  color: #f8fafc;
+}
+
+.projection-container label {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.projection-container .p-dropdown {
+  background: #111827;
+  border: 1px solid #334155;
+  color: #f8fafc;
+}
+
+.projection-container .p-dropdown .p-dropdown-label {
+  color: #f8fafc;
+}
+
+.projection-container .p-dropdown .p-dropdown-trigger {
+  color: #94a3b8;
+}
+
+.projection-container .test-voice-input {
+  background: #0b0f19;
+  border: 1px solid #334155;
+  color: #f8fafc;
+}
+
+.projection-container .test-voice-btn {
+  background: #1e293b;
+  border: 1px solid #475569;
+  color: #f8fafc;
+}
+
+.projection-container .chrome-device-tip {
+  background-color: #0b0f19;
+  border: 1px solid #1f293d;
+  color: #94a3b8;
+}
+
+.projection-container .chrome-device-tip .tip-header {
+  color: #f8fafc;
+}
+
+.projection-container .server-config-card {
+  background: #0b0f19;
+  border: 1px solid #1f293d;
+  color: #cbd5e1;
+}
+
+.projection-container .server-config-card label {
+  color: #cbd5e1;
 }
