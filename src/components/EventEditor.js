@@ -1,7 +1,7 @@
 // =============== EventEditor.js (Fixed & Enhanced) ===============
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Card } from "primereact/card";
 import { Calendar } from "primereact/calendar";
 import { InputText } from "primereact/inputtext";
@@ -13,7 +13,6 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import { OrderList } from "primereact/orderlist";
 import "./EventEditor.css";
 
-
 const EventEditor = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [eventName, setEventName] = useState("");
@@ -23,10 +22,12 @@ const EventEditor = () => {
   const [songs, setSongs] = useState([]);
   const [selectedSongIds, setSelectedSongIds] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const [clonedFromEventName, setClonedFromEventName] = useState(null);
 
-  console.log("Editing event with ID:", id);
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const cloneFromId = searchParams.get("cloneFrom");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadData = async () => {
@@ -36,8 +37,19 @@ const EventEditor = () => {
       if (id) {
         const event = await fetchEventById(id);
         if (event) {
-          setEventName(event.name);
-          setEventDate(new Date(event.date.seconds * 1000));
+          setEventName(event.name || "");
+          setEventDate(event.date?.seconds ? new Date(event.date.seconds * 1000) : new Date());
+          setSelectedSongIds(event.songs || []);
+          setMixer(event.mixer || "");
+          setLyricsRole(event.lyricsRole || "");
+        }
+      } else if (cloneFromId) {
+        const event = await fetchEventById(cloneFromId);
+        if (event) {
+          setClonedFromEventName(event.name || "Historical Event");
+          setEventName(event.name || "");
+          // Default to today for the new event date
+          setEventDate(new Date());
           setSelectedSongIds(event.songs || []);
           setMixer(event.mixer || "");
           setLyricsRole(event.lyricsRole || "");
@@ -46,9 +58,18 @@ const EventEditor = () => {
       setLoading(false);
     };
     loadData();
-  }, [id]);
+  }, [id, cloneFromId]);
 
   const handleSubmit = async () => {
+    if (!eventName.trim()) {
+      alert("Please enter an event name.");
+      return;
+    }
+    if (!eventDate) {
+      alert("Please select an event date.");
+      return;
+    }
+
     const data = {
       name: eventName,
       date: eventDate,
@@ -65,16 +86,38 @@ const EventEditor = () => {
     navigate("/");
   };
 
+  const handleSaveAsNew = async () => {
+    if (!eventName.trim()) {
+      alert("Please enter an event name.");
+      return;
+    }
+    if (!eventDate) {
+      alert("Please select an event date.");
+      return;
+    }
+
+    const data = {
+      name: eventName,
+      date: eventDate,
+      songs: selectedSongIds,
+      mixer,
+      lyricsRole,
+    };
+
+    await addEvent(data);
+    navigate("/");
+  };
+
   const handleSongToggle = (songId) => {
     const exists = selectedSongIds.includes(songId);
     const newSelection = exists
-      ? selectedSongIds.filter((id) => id !== songId)
+      ? selectedSongIds.filter((item) => item !== songId)
       : [...selectedSongIds, songId];
     setSelectedSongIds(newSelection);
   };
 
   const selectedSongsObjects = selectedSongIds
-    .map((id) => songs.find((s) => s.id === id))
+    .map((songId) => songs.find((s) => s.id === songId))
     .filter(Boolean);
 
   const itemTemplate = (item) => {
@@ -107,25 +150,62 @@ const EventEditor = () => {
 
   return (
     <div className="event-editor-container">
-      <Card title={id ? "Edit Event" : "Create Event"} className="event-editor-card">
+      <Card 
+        title={
+          cloneFromId 
+            ? "Reuse Event on New Date" 
+            : id 
+              ? "Edit Event Date & Songs" 
+              : "Create Event"
+        } 
+        className="event-editor-card"
+      >
+        {clonedFromEventName && (
+          <div style={{
+            background: "rgba(59, 130, 246, 0.15)",
+            border: "1px solid #3b82f6",
+            borderRadius: "8px",
+            padding: "10px 14px",
+            marginBottom: "16px",
+            color: "#60a5fa",
+            fontSize: "0.85rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}>
+            <i className="pi pi-copy" style={{ fontSize: "1rem" }} />
+            <span>Reusing songs from past event: <strong>{clonedFromEventName}</strong>. Pick a new date below and save!</span>
+          </div>
+        )}
+
         <div className="form-group">
           <label>Event Name</label>
-          <InputText value={eventName} onChange={(e) => setEventName(e.target.value)} />
+          <InputText value={eventName} onChange={(e) => setEventName(e.target.value)} className="w-full" />
         </div>
+
         <div className="form-group">
           <label>Event Date</label>
-          <Calendar value={eventDate} onChange={(e) => setEventDate(e.value)} showIcon />
+          <Calendar 
+            value={eventDate} 
+            onChange={(e) => setEventDate(e.value)} 
+            showIcon 
+            className="w-full"
+            placeholder="Select new date"
+          />
         </div>
+
         <div className="form-group">
           <label>Mixer</label>
-          <InputText value={mixer} onChange={(e) => setMixer(e.target.value)} />
+          <InputText value={mixer} onChange={(e) => setMixer(e.target.value)} className="w-full" />
         </div>
+
         <div className="form-group">
           <label>Lyrics</label>
-          <InputText value={lyricsRole} onChange={(e) => setLyricsRole(e.target.value)} />
+          <InputText value={lyricsRole} onChange={(e) => setLyricsRole(e.target.value)} className="w-full" />
         </div>
+
         <div className="form-group">
-          <label>Select Songs</label>
+          <label>Select Songs ({selectedSongIds.length} selected)</label>
           <InputText
             placeholder="Search by song or singer..."
             value={searchTerm}
@@ -154,6 +234,7 @@ const EventEditor = () => {
               ))}
           </div>
         </div>
+
         {selectedSongIds.length > 0 && (
           <div className="form-group mt-4">
             <label>Selected Songs Order (Drag to Reorder)</label>
@@ -165,7 +246,34 @@ const EventEditor = () => {
             />
           </div>
         )}
-        <Button label="Save Event" icon="pi pi-save" className="p-button-success save-btn" onClick={handleSubmit} />
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "24px" }}>
+          <Button 
+            label={id ? "Update Event Date / Details" : "Save Event"} 
+            icon="pi pi-check" 
+            className="p-button-success" 
+            onClick={handleSubmit} 
+            style={{ flex: 1, minWidth: "180px" }}
+          />
+          {id && (
+            <Button
+              type="button"
+              label="Save as New Event (Copy on this Date)"
+              icon="pi pi-copy"
+              className="p-button-outlined p-button-info"
+              onClick={handleSaveAsNew}
+              title="Creates a new event for this date without overwriting the previous event"
+              style={{ flex: 1, minWidth: "220px" }}
+            />
+          )}
+          <Button
+            type="button"
+            label="Cancel"
+            icon="pi pi-times"
+            className="p-button-secondary p-button-text"
+            onClick={() => navigate(-1)}
+          />
+        </div>
       </Card>
     </div>
   );

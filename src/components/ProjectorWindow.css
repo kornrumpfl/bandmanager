@@ -14,6 +14,12 @@ html, body {
   width: 100vw;
   background-color: black;
   color: white;
+  transition: opacity 0.2s ease;
+}
+
+.projector-container.projector-blackout {
+  background-color: black !important;
+  cursor: none;
 }
 
 .lyrics-block {

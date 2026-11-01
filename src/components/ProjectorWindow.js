@@ -6,6 +6,7 @@ const ProjectorWindow = () => {
   const [fontSize, setFontSize] = useState("5vh");
   const [activePhraseIndex, setActivePhraseIndex] = useState(null);
   const [highlightPhrase, setHighlightPhrase] = useState(true);
+  const [isBlackout, setIsBlackout] = useState(false);
 
   useEffect(() => {
     // Listen for projection updates
@@ -38,9 +39,11 @@ const ProjectorWindow = () => {
         if (event.data.payload.activePhraseIndex !== undefined) {
           setActivePhraseIndex(event.data.payload.activePhraseIndex);
         }
+      } else if (event.data.type === 'SET_BLACKOUT') {
+        setIsBlackout(Boolean(event.data.payload.blackout));
       }
     };
-    
+
     // Attempt to request fullscreen when loaded
     const requestFullScreen = async () => {
       try {
@@ -51,7 +54,7 @@ const ProjectorWindow = () => {
         console.warn("Could not request fullscreen:", err);
       }
     };
-    
+
     // Browsers often require user interaction for fullscreen, 
     // so we can also add a click handler on the body as fallback.
     document.body.addEventListener('click', requestFullScreen, { once: true });
@@ -64,14 +67,14 @@ const ProjectorWindow = () => {
 
   const hasThreeTranslations = Boolean(
     currentBlock &&
-      currentBlock.pt?.length &&
-      currentBlock.de?.length &&
-      currentBlock.third?.length
+    currentBlock.pt?.length &&
+    currentBlock.de?.length &&
+    currentBlock.third?.length
   );
 
   return (
-    <div className="projector-container">
-      {currentBlock && (
+    <div className={`projector-container ${isBlackout ? 'projector-blackout' : ''}`}>
+      {currentBlock && !isBlackout && (
         <div
           className={`lyrics-block ${hasThreeTranslations ? 'three-translations' : ''}`}
           style={{ fontSize: fontSize }}
@@ -81,8 +84,8 @@ const ProjectorWindow = () => {
             const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
             const isRef = currentBlock.isBible && line.startsWith('— ');
             return (
-              <div 
-                key={`pt-${i}`} 
+              <div
+                key={`pt-${i}`}
                 className={`lyric-line pt-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
               >
                 {line}
@@ -94,8 +97,8 @@ const ProjectorWindow = () => {
             const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
             const isRef = currentBlock.isBible && line.startsWith('— ');
             return (
-              <div 
-                key={`de-${i}`} 
+              <div
+                key={`de-${i}`}
                 className={`lyric-line de-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
               >
                 {line}
@@ -107,8 +110,8 @@ const ProjectorWindow = () => {
             const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
             const isRef = currentBlock.isBible && line.startsWith('— ');
             return (
-              <div 
-                key={`third-${i}`} 
+              <div
+                key={`third-${i}`}
                 className={`lyric-line third-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
               >
                 {line}
