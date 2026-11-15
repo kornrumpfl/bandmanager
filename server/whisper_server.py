@@ -1,13 +1,27 @@
 import os
 import sys
 import tempfile
-import av
-import faster_whisper.audio
-from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.middleware.cors import CORSMiddleware
-import ctranslate2
-from faster_whisper import WhisperModel
-import uvicorn
+
+# Pre-flight check for dependencies with clear, friendly instructions
+try:
+    import av
+    import faster_whisper.audio
+    from fastapi import FastAPI, UploadFile, File, Form
+    from fastapi.middleware.cors import CORSMiddleware
+    import ctranslate2
+    from faster_whisper import WhisperModel
+    import uvicorn
+except ModuleNotFoundError as e:
+    pkg = getattr(e, 'name', str(e))
+    print("\n" + "=" * 65)
+    print(f"  [ERROR] Missing required Python package: '{pkg}'")
+    print("=" * 65)
+    print("  To fix this on this computer, run:")
+    print("\n      python -m pip install -r server/requirements.txt")
+    print("\n  Or install the dependencies directly:")
+    print("      python -m pip install \"av<18\" faster-whisper fastapi uvicorn python-multipart ctranslate2")
+    print("=" * 65 + "\n")
+    sys.exit(1)
 
 # Fix breaking change in PyAV 18/19+ where 'metadata_errors' parameter was removed
 _orig_av_open = av.open
@@ -100,71 +114,77 @@ def health():
         "status": "ok",
         "model": MODEL_SIZE,
         "device": DEVICE,
-        "compute_type": COMPUTE_TYPE,
-        "service": "local-whisper"
+        "compute_type": COMPUTE_TYPE
     }
 
 @app.post("/transcribe")
 async def transcribe(
     file: UploadFile = File(...),
-    prompt: str = Form(""),
-    language: str = Form("auto")
+    initial_prompt: str = Form(default=""),
+    language: str = Form(default=None),
 ):
-    suffix = os.path.splitext(file.filename or "")[1] or ".webm"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        content = await file.read()
-        tmp.write(content)
-        tmp_path = tmp.name
-
+    """
+    Receives an audio chunk (WebM/WAV) from useLocalWhisperFollower,
+    runs local Whisper inference, and returns recognized phrases with timestamps.
+    """
     try:
-        lang = None if language in ("", "auto") else language
-        
-        # Transcribe with vocabulary prompt for singing accuracy
-        segments, info = model.transcribe(
-            tmp_path,
-            initial_prompt=prompt if prompt else None,
-            language=lang,
-            beam_size=1, # greedy for lowest latency
-            best_of=1,
-            condition_on_previous_text=False, # CRITICAL: stops Whisper from locking onto previous phrase
-            repetition_penalty=1.2, # Penalize repeating words/phrases
-            no_repeat_ngram_size=3, # Prevent repeating n-grams
-            vad_filter=True, # filter non-vocal audio / noise
-            vad_parameters=dict(min_silence_duration_ms=250, threshold=0.35),
-            hallucination_silence_threshold=0.5 # suppress hallucinations in silence
-        )
+        suffix = os.path.splitext(file.filename)[1] or ".webm"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            tmp_path = tmp.name
 
-        transcript_parts = []
-        for segment in segments:
-            text = segment.text.strip()
-            if text:
-                transcript_parts.append(text)
+        try:
+            # Transcribe with singing optimizations:
+            # - beam_size=1 or 2 for instant sub-second response
+            # - condition_on_previous_text=False prevents hallucination feedback loops
+            # - vad_filter=True removes background crowd/band noise
+            segments, info = model.transcribe(
+                tmp_path,
+                language=language if language and language != "auto" else None,
+                initial_prompt=initial_prompt if initial_prompt else None,
+                beam_size=1,
+                best_of=1,
+                temperature=0.0,
+                condition_on_previous_text=False,
+                vad_filter=True,
+                vad_parameters=dict(
+                    min_silence_duration_ms=250,
+                    speech_pad_ms=200
+                ),
+            )
 
-        full_transcript = " ".join(transcript_parts).strip()
-        return {
-            "transcript": full_transcript,
-            "language": info.language,
-            "duration": round(info.duration, 2)
-        }
-    except Exception as e:
-        print(f"Transcription error: {e}")
-        return {"error": str(e), "transcript": ""}
-    finally:
-        if os.path.exists(tmp_path):
-            try:
+            results = []
+            full_text_parts = []
+            for segment in segments:
+                text = segment.text.strip()
+                if text:
+                    full_text_parts.append(text)
+                    results.append({
+                        "id": segment.id,
+                        "start": segment.start,
+                        "end": segment.end,
+                        "text": text,
+                        "confidence": getattr(segment, "avg_logprob", 0.0),
+                    })
+
+            full_text = " ".join(full_text_parts)
+            return {
+                "text": full_text,
+                "language": info.language,
+                "segments": results,
+            }
+        finally:
+            if os.path.exists(tmp_path):
                 os.remove(tmp_path)
-            except Exception:
-                pass
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e), "text": "", "segments": []}
 
 if __name__ == "__main__":
-    host = os.environ.get("HOST", "0.0.0.0")
-    port = int(os.environ.get("PORT", 5001))
-    print(f"\n==========================================")
-    print(f"  BandManager Whisper AI Server")
-    print(f"  Listening on all interfaces: http://0.0.0.0:{port}")
-    print(f"  Local PC: http://127.0.0.1:{port}")
-    print(f"  Network PCs: http://<this-computer-ip>:{port}")
-    print(f"  Device: {DEVICE.upper()} ({COMPUTE_TYPE})")
-    print(f"==========================================\n")
-    uvicorn.run(app, host=host, port=port, log_level="warning")
-
+    # Host on 0.0.0.0 so other PCs / laptops on church network can connect
+    PORT = int(os.environ.get("WHISPER_PORT", "5001"))
+    print(f"===> Server listening on http://0.0.0.0:{PORT}")
+    print(f"===> In BandManager settings, enter: http://<THIS-PC-IP>:{PORT}\n")
+    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="warning")

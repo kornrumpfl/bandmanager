@@ -140,6 +140,41 @@ const BibleProjection = () => {
     return localStorage.getItem("band_bible_slot3") || "es_nvi";
   });
 
+  // Custom text colors for each language / slot on projector
+  const [slot1Color, setSlot1Color] = useState(() => {
+    return localStorage.getItem("band_bible_slot1_color") || "#ffffff";
+  });
+  const [slot2Color, setSlot2Color] = useState(() => {
+    return localStorage.getItem("band_bible_slot2_color") || "#facc15";
+  });
+  const [slot3Color, setSlot3Color] = useState(() => {
+    return localStorage.getItem("band_bible_slot3_color") || "#38bdf8";
+  });
+
+  const handleSlotColorChange = (slotNum, newColor) => {
+    const updatedColors = {
+      pt: slotNum === 1 ? newColor : slot1Color,
+      de: slotNum === 2 ? newColor : slot2Color,
+      third: slotNum === 3 ? newColor : slot3Color,
+    };
+    if (slotNum === 1) {
+      setSlot1Color(newColor);
+      localStorage.setItem("band_bible_slot1_color", newColor);
+    } else if (slotNum === 2) {
+      setSlot2Color(newColor);
+      localStorage.setItem("band_bible_slot2_color", newColor);
+    } else if (slotNum === 3) {
+      setSlot3Color(newColor);
+      localStorage.setItem("band_bible_slot3_color", newColor);
+    }
+    if (bcRef.current) {
+      bcRef.current.postMessage({
+        type: "UPDATE_CONFIG",
+        payload: { colors: updatedColors },
+      });
+    }
+  };
+
   const [selectedBookIdx, setSelectedBookIdx] = useState(0);
   const [selectedChapterIdx, setSelectedChapterIdx] = useState(0);
   const [selectedVerseIdx, setSelectedVerseIdx] = useState(0);
@@ -960,7 +995,15 @@ const BibleProjection = () => {
                   );
                 }}
               />
-              <span className="slot-color-dot dot-slot1" />
+              <label className="slot-color-picker-wrap" title={`Change text color for this translation (Current: ${slot1Color})`}>
+                <input
+                  type="color"
+                  value={slot1Color}
+                  onChange={(e) => handleSlotColorChange(1, e.target.value)}
+                  className="slot-color-input"
+                />
+                <span className="slot-color-dot" style={{ backgroundColor: slot1Color }} />
+              </label>
               <select
                 value={slot1Version}
                 onChange={(e) => {
@@ -992,7 +1035,15 @@ const BibleProjection = () => {
                   );
                 }}
               />
-              <span className="slot-color-dot dot-slot2" />
+              <label className="slot-color-picker-wrap" title={`Change text color for this translation (Current: ${slot2Color})`}>
+                <input
+                  type="color"
+                  value={slot2Color}
+                  onChange={(e) => handleSlotColorChange(2, e.target.value)}
+                  className="slot-color-input"
+                />
+                <span className="slot-color-dot" style={{ backgroundColor: slot2Color }} />
+              </label>
               <select
                 value={slot2Version}
                 onChange={(e) => {
@@ -1024,7 +1075,15 @@ const BibleProjection = () => {
                   );
                 }}
               />
-              <span className="slot-color-dot dot-slot3" />
+              <label className="slot-color-picker-wrap" title={`Change text color for this translation (Current: ${slot3Color})`}>
+                <input
+                  type="color"
+                  value={slot3Color}
+                  onChange={(e) => handleSlotColorChange(3, e.target.value)}
+                  className="slot-color-input"
+                />
+                <span className="slot-color-dot" style={{ backgroundColor: slot3Color }} />
+              </label>
               <select
                 value={slot3Version}
                 onChange={(e) => {
@@ -1077,7 +1136,7 @@ const BibleProjection = () => {
                       <span className="verse-text">{verseText}</span>
                     </div>
                     {isSelected && slot2Enabled && v2Text && (
-                      <div className="verse-row-secondary">
+                      <div className="verse-row-secondary" style={{ color: slot2Color }}>
                         <span className="verse-sub-tag">
                           [{versionMetaMap[slot2Version]?.shortLabel || "2"}]
                         </span>{" "}
@@ -1085,7 +1144,7 @@ const BibleProjection = () => {
                       </div>
                     )}
                     {isSelected && slot3Enabled && v3Text && (
-                      <div className="verse-row-tertiary">
+                      <div className="verse-row-tertiary" style={{ color: slot3Color }}>
                         <span className="verse-sub-tag">
                           [{versionMetaMap[slot3Version]?.shortLabel || "3"}]
                         </span>{" "}
@@ -1150,17 +1209,17 @@ const BibleProjection = () => {
             <div className="holyrics-preview-and-font-wrap">
               <div className="holyrics-mini-preview" title="Live Projection Preview (Up to 3 Translations)">
               {slot1Enabled && currentSlot1Text && (
-                <div className="mini-preview-pt">
+                <div className="mini-preview-pt" style={{ color: slot1Color }}>
                   {selectedVerseIdx + 1}. {currentSlot1Text}
                 </div>
               )}
               {slot2Enabled && currentSlot2Text && (
-                <div className="mini-preview-de">
+                <div className="mini-preview-de" style={{ color: slot2Color }}>
                   {selectedVerseIdx + 1}. {currentSlot2Text}
                 </div>
               )}
               {slot3Enabled && currentSlot3Text && (
-                <div className="mini-preview-third">
+                <div className="mini-preview-third" style={{ color: slot3Color }}>
                   {selectedVerseIdx + 1}. {currentSlot3Text}
                 </div>
               )}

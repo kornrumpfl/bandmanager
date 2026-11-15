@@ -39,11 +39,21 @@ const ProjectorWindow = () => {
         if (event.data.payload.activePhraseIndex !== undefined) {
           setActivePhraseIndex(event.data.payload.activePhraseIndex);
         }
+        if (event.data.payload.colors) {
+          setCurrentBlock((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  colors: { ...(prev.colors || {}), ...event.data.payload.colors },
+                }
+              : prev
+          );
+        }
       } else if (event.data.type === 'SET_BLACKOUT') {
         setIsBlackout(Boolean(event.data.payload.blackout));
       }
     };
-
+    
     // Attempt to request fullscreen when loaded
     const requestFullScreen = async () => {
       try {
@@ -54,7 +64,7 @@ const ProjectorWindow = () => {
         console.warn("Could not request fullscreen:", err);
       }
     };
-
+    
     // Browsers often require user interaction for fullscreen, 
     // so we can also add a click handler on the body as fallback.
     document.body.addEventListener('click', requestFullScreen, { once: true });
@@ -84,9 +94,10 @@ const ProjectorWindow = () => {
             const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
             const isRef = currentBlock.isBible && line.startsWith('— ');
             return (
-              <div
-                key={`pt-${i}`}
+              <div 
+                key={`pt-${i}`} 
                 className={`lyric-line pt-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
+                style={currentBlock.colors?.pt ? { color: currentBlock.colors.pt } : undefined}
               >
                 {line}
               </div>
@@ -97,9 +108,10 @@ const ProjectorWindow = () => {
             const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
             const isRef = currentBlock.isBible && line.startsWith('— ');
             return (
-              <div
-                key={`de-${i}`}
+              <div 
+                key={`de-${i}`} 
                 className={`lyric-line de-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
+                style={currentBlock.colors?.de ? { color: currentBlock.colors.de } : undefined}
               >
                 {line}
               </div>
@@ -110,9 +122,10 @@ const ProjectorWindow = () => {
             const isDimmed = highlightPhrase && activePhraseIndex !== null && activePhraseIndex !== i;
             const isRef = currentBlock.isBible && line.startsWith('— ');
             return (
-              <div
-                key={`third-${i}`}
+              <div 
+                key={`third-${i}`} 
                 className={`lyric-line third-line ${isRef ? 'bible-ref-line' : ''} ${isHighlighted ? 'phrase-active' : ''} ${isDimmed ? 'phrase-dimmed' : ''}`}
+                style={currentBlock.colors?.third ? { color: currentBlock.colors.third } : undefined}
               >
                 {line}
               </div>
