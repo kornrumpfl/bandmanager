@@ -148,7 +148,7 @@ const BibleProjection = () => {
     return localStorage.getItem("band_bible_slot2_color") || "#facc15";
   });
   const [slot3Color, setSlot3Color] = useState(() => {
-    return localStorage.getItem("band_bible_slot3_color") || "#38bdf8";
+    return localStorage.getItem("band_bible_slot3_color") || "#ffffff";
   });
 
   const handleSlotColorChange = (slotNum, newColor) => {
@@ -319,22 +319,22 @@ const BibleProjection = () => {
 
   const currentChapterVersesSlot1 =
     primaryBible &&
-    primaryBible[selectedBookIdx] &&
-    primaryBible[selectedBookIdx].chapters[selectedChapterIdx]
+      primaryBible[selectedBookIdx] &&
+      primaryBible[selectedBookIdx].chapters[selectedChapterIdx]
       ? primaryBible[selectedBookIdx].chapters[selectedChapterIdx]
       : [];
 
   const currentChapterVersesSlot2 =
     secondaryBible &&
-    secondaryBible[selectedBookIdx] &&
-    secondaryBible[selectedBookIdx].chapters[selectedChapterIdx]
+      secondaryBible[selectedBookIdx] &&
+      secondaryBible[selectedBookIdx].chapters[selectedChapterIdx]
       ? secondaryBible[selectedBookIdx].chapters[selectedChapterIdx]
       : [];
 
   const currentChapterVersesSlot3 =
     tertiaryBible &&
-    tertiaryBible[selectedBookIdx] &&
-    tertiaryBible[selectedBookIdx].chapters[selectedChapterIdx]
+      tertiaryBible[selectedBookIdx] &&
+      tertiaryBible[selectedBookIdx].chapters[selectedChapterIdx]
       ? tertiaryBible[selectedBookIdx].chapters[selectedChapterIdx]
       : [];
 
@@ -705,12 +705,12 @@ const BibleProjection = () => {
       prev.map((b) =>
         b.id === bibleId
           ? {
-              ...b,
-              shortLabel: cleanShort,
-              fullName: cleanFull,
-              lang: editForm.lang,
-              copyright: editForm.copyright,
-            }
+            ...b,
+            shortLabel: cleanShort,
+            fullName: cleanFull,
+            lang: editForm.lang,
+            copyright: editForm.copyright,
+          }
           : b
       )
     );
@@ -908,9 +908,8 @@ const BibleProjection = () => {
           </button>
           <button
             type="button"
-            className={`holyrics-top-action-btn manage-bibles-top-btn ${
-              showBibleManager ? "active" : ""
-            }`}
+            className={`holyrics-top-action-btn manage-bibles-top-btn ${showBibleManager ? "active" : ""
+              }`}
             onClick={() => setShowBibleManager(true)}
           >
             <i className="pi pi-sliders-h" /> Manage Bibles ({bibleList.length})
@@ -1126,9 +1125,8 @@ const BibleProjection = () => {
                   <div
                     key={vIdx}
                     id={`bible-verse-row-${vIdx}`}
-                    className={`holyrics-verse-item ${isSelected ? "selected" : ""} ${
-                      vIdx % 2 === 1 ? "alt" : ""
-                    }`}
+                    className={`holyrics-verse-item ${isSelected ? "selected" : ""} ${vIdx % 2 === 1 ? "alt" : ""
+                      }`}
                     onClick={() => handleSelectVerse(vIdx, false)}
                   >
                     <div className="verse-row-primary">
@@ -1208,60 +1206,60 @@ const BibleProjection = () => {
             </div>
             <div className="holyrics-preview-and-font-wrap">
               <div className="holyrics-mini-preview" title="Live Projection Preview (Up to 3 Translations)">
-              {slot1Enabled && currentSlot1Text && (
-                <div className="mini-preview-pt" style={{ color: slot1Color }}>
-                  {selectedVerseIdx + 1}. {currentSlot1Text}
+                {slot1Enabled && currentSlot1Text && (
+                  <div className="mini-preview-pt" style={{ color: slot1Color }}>
+                    {selectedVerseIdx + 1}. {currentSlot1Text}
+                  </div>
+                )}
+                {slot2Enabled && currentSlot2Text && (
+                  <div className="mini-preview-de" style={{ color: slot2Color }}>
+                    {selectedVerseIdx + 1}. {currentSlot2Text}
+                  </div>
+                )}
+                {slot3Enabled && currentSlot3Text && (
+                  <div className="mini-preview-third" style={{ color: slot3Color }}>
+                    {selectedVerseIdx + 1}. {currentSlot3Text}
+                  </div>
+                )}
+                <div className="mini-preview-ref">
+                  {currentBook.namePt} {selectedChapterIdx + 1}:{selectedVerseIdx + 1}
                 </div>
-              )}
-              {slot2Enabled && currentSlot2Text && (
-                <div className="mini-preview-de" style={{ color: slot2Color }}>
-                  {selectedVerseIdx + 1}. {currentSlot2Text}
-                </div>
-              )}
-              {slot3Enabled && currentSlot3Text && (
-                <div className="mini-preview-third" style={{ color: slot3Color }}>
-                  {selectedVerseIdx + 1}. {currentSlot3Text}
-                </div>
-              )}
-              <div className="mini-preview-ref">
-                {currentBook.namePt} {selectedChapterIdx + 1}:{selectedVerseIdx + 1}
               </div>
-            </div>
 
-            <div className="holyrics-font-controls">
-              <div className="bible-font-slider-wrap">
-                <i className="pi pi-text-height" style={{ fontSize: "0.75rem", color: "#9ca3af" }} />
-                <input
-                  type="range"
-                  min="2.5"
-                  max="8.0"
-                  step="0.2"
-                  value={fontSize}
-                  onChange={(e) => handleFontSizeChange(e.target.value)}
-                  className="bible-font-slider"
-                  title={`Slide to adjust font size: ${fontSize}vh`}
-                />
-                <span className="bible-font-size-label">{fontSize}vh</span>
+              <div className="holyrics-font-controls">
+                <div className="bible-font-slider-wrap">
+                  <i className="pi pi-text-height" style={{ fontSize: "0.75rem", color: "#9ca3af" }} />
+                  <input
+                    type="range"
+                    min="2.5"
+                    max="8.0"
+                    step="0.2"
+                    value={fontSize}
+                    onChange={(e) => handleFontSizeChange(e.target.value)}
+                    className="bible-font-slider"
+                    title={`Slide to adjust font size: ${fontSize}vh`}
+                  />
+                  <span className="bible-font-size-label">{fontSize}vh</span>
+                </div>
+                <div className="font-step-btns">
+                  <button
+                    type="button"
+                    className="font-step-btn"
+                    onClick={() => handleFontSizeChange(Math.max(2.5, fontSize - 0.5))}
+                    title="Smaller (-0.5)"
+                  >
+                    -
+                  </button>
+                  <button
+                    type="button"
+                    className="font-step-btn"
+                    onClick={() => handleFontSizeChange(Math.min(8.0, fontSize + 0.5))}
+                    title="Larger (+0.5)"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <div className="font-step-btns">
-                <button
-                  type="button"
-                  className="font-step-btn"
-                  onClick={() => handleFontSizeChange(Math.max(2.5, fontSize - 0.5))}
-                  title="Smaller (-0.5)"
-                >
-                  -
-                </button>
-                <button
-                  type="button"
-                  className="font-step-btn"
-                  onClick={() => handleFontSizeChange(Math.min(8.0, fontSize + 0.5))}
-                  title="Larger (+0.5)"
-                >
-                  +
-                </button>
-              </div>
-            </div>
             </div>
           </div>
         </div>
@@ -1312,9 +1310,8 @@ const BibleProjection = () => {
                 <button
                   key={book.abbrev}
                   type="button"
-                  className={`holyrics-book-tile cat-${book.category} ${
-                    isSelected ? "selected" : ""
-                  }`}
+                  className={`holyrics-book-tile cat-${book.category} ${isSelected ? "selected" : ""
+                    }`}
                   onClick={() => handleSelectBook(book.index)}
                   title={`${book.namePt} / ${book.nameDe} / ${book.nameEs}`}
                 >
@@ -1459,9 +1456,8 @@ const BibleProjection = () => {
                     return (
                       <div
                         key={bible.id}
-                        className={`bm-bible-card ${
-                          bible.enabled === false ? "disabled-card" : ""
-                        }`}
+                        className={`bm-bible-card ${bible.enabled === false ? "disabled-card" : ""
+                          }`}
                       >
                         {isEditing ? (
                           <div className="bm-edit-form">
@@ -1671,8 +1667,8 @@ const BibleProjection = () => {
                       {isParsingFile
                         ? "Reading & parsing Bible file..."
                         : uploadFileName
-                        ? `Selected: ${uploadFileName}`
-                        : "Click to select a Bible file (.xml, .json, .bib, .bib2)"}
+                          ? `Selected: ${uploadFileName}`
+                          : "Click to select a Bible file (.xml, .json, .bib, .bib2)"}
                     </div>
                     <div className="bm-dropzone-sub">
                       Supports Zefania XML, OpenSong XML, OSIS XML, 66-book JSON, and known Holyrics .bib/.bib2 translations
@@ -1772,19 +1768,18 @@ const BibleProjection = () => {
                             onClick={() => handleDownloadCatalogBible(cat)}
                           >
                             <i
-                              className={`pi ${
-                                isDownloading
+                              className={`pi ${isDownloading
                                   ? "pi-spin pi-spinner"
                                   : isInstalled
-                                  ? "pi-refresh"
-                                  : "pi-cloud-download"
-                              }`}
+                                    ? "pi-refresh"
+                                    : "pi-cloud-download"
+                                }`}
                             />
                             {isDownloading
                               ? "Installing..."
                               : isInstalled
-                              ? "Reinstall"
-                              : "Download & Install"}
+                                ? "Reinstall"
+                                : "Download & Install"}
                           </button>
                         </div>
                       </div>
