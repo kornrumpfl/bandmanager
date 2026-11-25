@@ -256,7 +256,7 @@
 }
 
 .dot-slot3 {
-  background-color: #38bdf8;
+  background-color: #ffffff;
 }
 
 .holyrics-version-slot input[type="checkbox"] {
@@ -684,6 +684,7 @@
 .holyrics-book-tile.cat-pentateuch {
   background: linear-gradient(180deg, #68401b 0%, #583515 100%);
 }
+
 .holyrics-book-tile.cat-pentateuch.selected {
   background: linear-gradient(180deg, #1f1308 0%, #3a230e 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -692,6 +693,7 @@
 .holyrics-book-tile.cat-historical {
   background: linear-gradient(180deg, #df8317 0%, #c97310 100%);
 }
+
 .holyrics-book-tile.cat-historical.selected {
   background: linear-gradient(180deg, #4f2c05 0%, #7d4609 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -700,6 +702,7 @@
 .holyrics-book-tile.cat-poetic {
   background: linear-gradient(180deg, #cf2319 0%, #b51b12 100%);
 }
+
 .holyrics-book-tile.cat-poetic.selected {
   background: linear-gradient(180deg, #4a0a06 0%, #78110b 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -708,6 +711,7 @@
 .holyrics-book-tile.cat-prophets {
   background: linear-gradient(180deg, #852c87 0%, #702372 100%);
 }
+
 .holyrics-book-tile.cat-prophets.selected {
   background: linear-gradient(180deg, #2e0d2f 0%, #4d174f 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -716,6 +720,7 @@
 .holyrics-book-tile.cat-gospels {
   background: linear-gradient(180deg, #314d94 0%, #273f7a 100%);
 }
+
 .holyrics-book-tile.cat-gospels.selected {
   background: linear-gradient(180deg, #101a36 0%, #1c2d59 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -724,6 +729,7 @@
 .holyrics-book-tile.cat-acts {
   background: linear-gradient(180deg, #158da1 0%, #107788 100%);
 }
+
 .holyrics-book-tile.cat-acts.selected {
   background: linear-gradient(180deg, #063138 0%, #0b515d 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -732,6 +738,7 @@
 .holyrics-book-tile.cat-epistles {
   background: linear-gradient(180deg, #188c49 0%, #13753c 100%);
 }
+
 .holyrics-book-tile.cat-epistles.selected {
   background: linear-gradient(180deg, #072e17 0%, #0d4f28 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -740,6 +747,7 @@
 .holyrics-book-tile.cat-revelation {
   background: linear-gradient(180deg, #74b01b 0%, #629615 100%);
 }
+
 .holyrics-book-tile.cat-revelation.selected {
   background: linear-gradient(180deg, #263b07 0%, #41630d 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
@@ -1041,7 +1049,7 @@
 }
 
 .bm-slot-pill.slot3 {
-  background-color: #38bdf8;
+  background-color: #ffffff;
   color: #0f172a;
 }
 
