@@ -115,7 +115,7 @@ const BibleProjection = () => {
   // 3 Simultaneous Translation Slots:
   // Slot 1 (1st on screen - White Bold)
   // Slot 2 (2nd on screen - Yellow)
-  // Slot 3 (3rd on screen - Light Cyan)
+  // Slot 3 (3rd on screen - White)
   const [slot1Enabled, setSlot1Enabled] = useState(() => {
     const saved = localStorage.getItem("band_bible_slot1_enabled");
     return saved !== null ? JSON.parse(saved) : true;
@@ -148,7 +148,11 @@ const BibleProjection = () => {
     return localStorage.getItem("band_bible_slot2_color") || "#facc15";
   });
   const [slot3Color, setSlot3Color] = useState(() => {
-    return localStorage.getItem("band_bible_slot3_color") || "#ffffff";
+    const saved = localStorage.getItem("band_bible_slot3_color");
+    if (!saved || saved.toLowerCase() === "#38bdf8" || saved.toLowerCase() === "#7dd3fc") {
+      return "#ffffff";
+    }
+    return saved;
   });
 
   const handleSlotColorChange = (slotNum, newColor) => {
@@ -377,7 +381,7 @@ const BibleProjection = () => {
         deLines.push(`— ${bookName2} ${chNum}:${vNum} (${meta2?.shortLabel || "V2"})`);
       }
 
-      // 3rd Translation (Light Cyan at bottom)
+      // 3rd Translation (White at bottom)
       if (slot3Enabled && v3Text) {
         const bookName3 = getLocalizedBookName(bookMeta, meta3?.lang);
         thirdLines.push(`${vNum}. ${v3Text}`);
@@ -390,6 +394,11 @@ const BibleProjection = () => {
         pt: ptLines,
         de: deLines,
         third: thirdLines,
+        colors: {
+          pt: slot1Color,
+          de: slot2Color,
+          third: slot3Color,
+        },
       };
 
       bcRef.current.postMessage({
@@ -414,6 +423,9 @@ const BibleProjection = () => {
       slot3Version,
       versionMetaMap,
       fontSize,
+      slot1Color,
+      slot2Color,
+      slot3Color,
     ]
   );
 
@@ -1061,7 +1073,7 @@ const BibleProjection = () => {
 
             <div
               className={`holyrics-version-slot ${slot3Enabled ? "slot-active-3" : ""}`}
-              title="3rd Translation on Projector (Light Cyan)"
+              title="3rd Translation on Projector (White)"
             >
               <input
                 type="checkbox"
@@ -1435,7 +1447,7 @@ const BibleProjection = () => {
                     </span>
                     <span>
                       <span className="slot-color-dot dot-slot3" />{" "}
-                      <strong>3rd (Cyan):</strong>{" "}
+                      <strong>3rd (White):</strong>{" "}
                       {slot3Enabled
                         ? versionMetaMap[slot3Version]?.fullName || slot3Version
                         : "Off"}
@@ -1547,7 +1559,7 @@ const BibleProjection = () => {
                                   <span className="bm-slot-pill slot2">2nd (Yellow)</span>
                                 )}
                                 {isSlot3 && (
-                                  <span className="bm-slot-pill slot3">3rd (Cyan)</span>
+                                  <span className="bm-slot-pill slot3">3rd (White)</span>
                                 )}
                               </div>
                               <div className="bm-card-title">{bible.fullName}</div>
@@ -1601,7 +1613,7 @@ const BibleProjection = () => {
                                     JSON.stringify(true)
                                   );
                                 }}
-                                title="Set as 3rd projected translation (Light Cyan)"
+                                title="Set as 3rd projected translation (White)"
                               >
                                 Set 3rd
                               </button>

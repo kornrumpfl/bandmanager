@@ -69,7 +69,7 @@ body {
 }
 
 .third-line {
-  color: #38bdf8;
+  color: #ffffff;
 }
 
 /* Active phrase styling when phrase highlighting is enabled */
@@ -86,8 +86,8 @@ body {
 }
 
 .lyric-line.phrase-active.third-line {
-  color: #bae6fd;
-  text-shadow: 0 0 20px rgba(56, 189, 248, 0.9), 0 0 35px rgba(14, 165, 233, 0.6);
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 35px rgba(255, 255, 255, 0.6);
   transform: scale(1.02);
 }
 
