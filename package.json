@@ -1,6 +1,6 @@
 {
   "name": "band-app",
-  "version": "3.0.0",
+  "version": "6.4.0",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",

@@ -30,7 +30,7 @@ const AppLayout = () => {
         </Routes>
       </div>
       <footer className="app-footer">
-        <p>Band Manager v4.0.0</p>
+        <p>Band Manager v6.4.0</p>
       </footer>
     </div>
   );
